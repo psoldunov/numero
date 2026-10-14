@@ -145,8 +145,13 @@ impl Engine {
             None => return Err(ExtensionError::UnknownUnit(spec.base_unit_id.clone())),
         };
         let ratio = Num::parse(&spec.ratio.to_string()).unwrap_or(Num::Float(spec.ratio));
+        let symbol = spec
+            .international_symbol
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty());
         Arc::make_mut(&mut self.vocab)
-            .add_unit(&spec.id, &spec.phrases, base, ratio, &spec.format)
+            .add_unit(&spec.id, &spec.phrases, symbol, base, ratio, &spec.format)
             .ok_or_else(|| ExtensionError::UnsupportedBase(spec.base_unit_id.clone()))?;
         self.units.push(spec);
         Ok(())

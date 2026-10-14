@@ -45,7 +45,7 @@ impl From<f64> for ScriptValue {
 }
 
 /// `numi.addUnit`'s dictionary: one `id` is `ratio` of `base_unit_id`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct UnitSpec {
     pub id: String,
     /// Comma-separated input phrases (`horse, horses, hrs`).
@@ -54,6 +54,11 @@ pub struct UnitSpec {
     /// Output format; `%@` marks the number, otherwise it follows it.
     pub format: String,
     pub ratio: f64,
+    /// Numi's `internationalSymbol`: the unit's English symbol. Like a
+    /// built-in unit's `.symbol` (§1.1, §12.8) it is matched as one more
+    /// input phrase and is the symbol the unit's id is spelled with; the
+    /// output still follows `format`.
+    pub international_symbol: Option<String>,
 }
 
 /// `numi.addFunction`'s dictionary.
@@ -117,7 +122,6 @@ pub fn to_value(
             .ok_or(ExtensionError::Invalid("date"))?;
         return Ok(Value::Date(Moment {
             at: at.with_timezone(&tz),
-            has_time: true,
         }));
     }
     let unit = match vocab
@@ -159,8 +163,9 @@ pub fn call(index: u16, args: &[Value], scope: &Scope<'_>) -> Eval<Value> {
     };
     let script_args: Vec<ScriptValue> = args.iter().map(|v| to_script(v, scope.vocab)).collect();
     match (function.run)(&script_args) {
-        Ok(result) => to_value(&result, scope.vocab, scope.ctx.local_tz)
-            .map_err(|e| crate::value::EvalError(e.to_string())),
+        Ok(result) => {
+            to_value(&result, scope.vocab, scope.ctx.local_tz).or_else(|e| fail(e.to_string()))
+        }
         Err(message) => fail(message),
     }
 }

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Numero.app's Info.plist. bundle.sh puts the workspace's version in for
+  @version@.
+-->
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleDisplayName</key>
+  <string>Numero</string>
+  <key>CFBundleExecutable</key>
+  <string>numero-app</string>
+  <key>CFBundleIconFile</key>
+  <string>numero</string>
+  <key>CFBundleIdentifier</key>
+  <string>dev.soldunov.numero</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>Numero</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@version@</string>
+  <key>CFBundleVersion</key>
+  <string>@version@</string>
+
+  <!-- numero://new?text=, numero://open?name= and numero://show. -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>CFBundleURLName</key>
+      <string>Numero URL</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>numero</string>
+      </array>
+    </dict>
+  </array>
+
+  <!-- A file opens as a new calculation. .numi is Numi's own extension. -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Numero Calculation</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>numi</string>
+        <string>txt</string>
+      </array>
+      <key>LSHandlerRank</key>
+      <string>Alternate</string>
+    </dict>
+  </array>
+
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.productivity</string>
+  <!-- No .cargo/config.toml sets MACOSX_DEPLOYMENT_TARGET, so this is
+       the project's own floor. -->
+  <key>LSMinimumSystemVersion</key>
+  <string>13.0</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+</dict>
+</plist>

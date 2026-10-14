@@ -20,9 +20,11 @@ Evidence files:
 
 ## 0. Engine architecture
 
-- Numbers are decimal, not binary floating point [obs]. All arithmetic uses `NSDecimalNumber` (38-digit mantissa, base-10 exponent -128..127). Every arithmetic call passes an `NSDecimalNumberHandler(roundingMode: .up (2), scale: 38, raises nothing)` (e.g. `FUN_00062670`, `FUN_000ce960`). In practice that means 38 significant digits, rounding up at the 38th decimal place, and no exceptions: overflow, underflow and divide-by-zero give NaN.
-  - Rust: use a decimal type with at least 28-38 significant digits (`rust_decimal` has 28; `bigdecimal` is unbounded) and keep a NaN / "no result" state.
+- Numbers are decimal, not binary floating point [obs]. All arithmetic uses `NSDecimalNumber` (128-bit mantissa, base-10 exponent -128..127). Every arithmetic call passes an `NSDecimalNumberHandler(roundingMode: .up (2), scale: 38, raises nothing)` (e.g. `FUN_00062670`, `FUN_000ce960`). In practice that means 38 significant digits, rounding up at the 38th decimal place, and no exceptions: overflow, underflow and divide-by-zero give NaN.
+  - [oracle] The mantissa is the full 128 bits, so a 39-digit value whose mantissa fits stays exact: `10^38 + 1` → `100,000,000,000,000,000,000,000,000,000,000,000,001`, and a 40-digit literal ending in 0 prints every digit. Integer powers and long literals are exact (`10^39`, `2^100`, a 30-digit literal); `10^30 / 3` keeps 38 digits.
+  - Rust: Numero computes with `rust_decimal` (28 digits) and moves to its own 128-bit-mantissa decimal (`src/big.rs`) when a result overflows, keeping a NaN / "no result" state.
 - Transcendental functions and a few operators go through `f64` [obs]: trig, hyperbolic, `ln`, `log`, `root`, `cbrt`, `sqrt`, `fact` (`tgamma`), `mod`, non-integer `^` (`pow`), the degree ratio (π/180 as a double), and `pi` itself (`NSDecimalNumber(double: M_PI)`). Their results are converted back to decimal from the double, so they carry about 15-17 significant digits.
+  - [oracle] The conversion is Foundation's `Decimal(Double)`: multiply the absolute value by 10 until it reaches 2⁶⁴, divide by 10 while it is at least 2⁶⁴, truncate to a `UInt64` mantissa, keep the exponent. Every step rounds in binary, so the low digits are invented: `fact(25)` → `15,511,210,043,330,981,888,000,000`, `fact(30)` → `265,252,859,812,191,078,400,000,000,000,000`, `tan(90)` → `16,331,239,353,195,368.45`. Numero emulates it (`Num::from_double`).
 - A Value is a number plus a string-keyed attribute bag (`Value.attributes`) [obs]. Keys seen: `decimal` (the number), `unit` (unit id), `nsystem` (`hex`/`oct`/`bin`/`sci`, output radix), `date`, `time_zone`, `operation`, `opPriority`, `scale`, `percent`, `geo_name`. A value with no attributes is "empty" (the line has no result). `sum`/`avg` depend on this, see §5.
 - Per-line pipeline [obs, names from symbols]: extractors tokenise the line into typed elements; matchers group tokens into values and expressions (`DecimalFollowedByUnitMatcher`, `UnitFollowedByDecimalMatcher`, `UnitAroundDecimalMatcher`, `ScaledExpressionMatcher`, `FunctionExpressionMatcher`, `ExplicitUnitConversionMatcher`, `TimePrefixedByTimeZoneMatcher`, `GeoNameSequenceMatcher`); evaluators fold operators by priority (§2). The document is evaluated top to bottom with one shared `Context` (variables, `prev_result`, `prev_results`, `grand_total`, `current_time`, `ppi`, `em`, constants).
 - Initialisation order (`FUN_00063ce0`) [obs]: operators (`FUN_0004ea10`), operations (`FUN_0004ff50`), extractors (`FUN_0004c1f0`), matchers/evaluators (`FUN_0004b750`), formatters, units (`FUN_00051d60`), functions (`FUN_0004db90`), currency (`FUN_000476b0`), crypto (`FUN_00048af0`), dates (`FUN_00049a10`), scales (`FUN_00051370`), constants (`FUN_00046370`), CSS (`FUN_00046930`).
@@ -37,7 +39,10 @@ Each unit has `id`, `phrases` (input words), `baseUnitId`, `baseRatio` (decimal)
 
 - Same-base conversion: `in_base = value * baseRatio`, `in_target = in_base / target.baseRatio`. The ratio is "base units per one of this unit" (inch = 0.0254, base `m`).
 - Temperature, CSS and currency use converter functions instead of the ratio.
-- Phrases come from `<id>.variants` in `L/<Category>.strings` (comma-separated). When the UI locale is not English, the English table is merged in as well [obs: `FUN_0007e710` param 5]. Units also get lower-cased copies of their phrases [inf: param 6 calls `lowercased()`]. Phrase collisions log `Duplicate unit for phrase '…': previously '…', adding as '…'` (`FUN_0009f630`) [obs]; which one wins is [unk].
+- Phrases come from `<id>.variants` in `L/<Category>.strings` (comma-separated). When the UI locale is not English, the English table is merged in as well [obs: `FUN_0007e710` param 5]. Units also get lower-cased copies of their phrases [inf: param 6 calls `lowercased()`]. Phrase collisions log `Duplicate unit for phrase '…': previously '…', adding as '…'` (`FUN_0009f630`) [obs]; the unit registered last wins [oracle], which is why crypto coins (`C`, `F`, `B`, `K`, `GMT`, `JST`…) take those phrases over once `coins2.json` loads (Numero does not copy that, see Deliberate deviations).
+- Matching case [oracle]: a phrase is first matched with its own case; when nothing matches, the lower-cased text is tried, so `1 KB` → `1 kb` (kilobit), `1 Kb in b` → `1,000 b`, `5 KM` → `5 km`, `1 NM` → `1 nm`, `5 G` → `5 g`, `5 T` → `5 t` (offline). `5 mb`, `5 gb`, `5 kib` match nothing. Currency codes also match in lower case (`5 usd` → `$5`, `5 try` → `₺5`, `5 all` → `5 L`, the lek) unless the spelling already means a unit (`5 cup` → `5 cup`).
+- Phrases in the tables that never match [oracle]: `°C` and `°F` (`25 °C` → `25 °`: the angle `°`, then a stray `C`), and `K` for kelvin (`K` is the thousand scale: `300 K in F` → `300,000 °F` offline). Only the words `celsius`/`fahrenheit`/`kelvin` and the letters `C`/`F` reach temperature. There is no `deg` phrase (`1 deg` → `1`).
+- Unit placement [oracle]: a unit right after another unit, a conversion target or `%` is ignored (`5 m kg` → `5 m`, `37 degrees celsius` → `37 °`, `10 % m` → `10 %`). A unit before a number applies to it (`km 5` → `5 km`, `kg 5 + 1` → `6 kg`); `at` is the attotonne, so `5 at 3` and `Meeting at 5` → `5 at`, and `at 2:30 pm` has no result.
 - Output: `<id>.format`. If the template contains `%@`, the number replaces it (`$%@` → `$5`). Otherwise the output is `"<number> <format>"` (`m` → `5 m`) [obs: `FUN_000ac360` checks for `%@` and prepends `"%@ "`]. There are no plural forms anywhere.
 
 ### 1.2 Category tables
@@ -74,7 +79,7 @@ Volume (`FUN_00057cc0`) [obs], base `m3`:
 
 | id | ratio (m³) | SI |
 |---|---|---|
-| `litre` | 0.001 | yes, negative ones included (ml, cl, dl, hl, kl…); `.symbol` `l` |
+| `litre` | 0.001 | yes, negative ones included (ml, cl, dl, hl, kl…); `.symbol` `l`. Display [oracle]: the litre itself is `L`, prefixed ones use the symbol: `1 l in ml` → `1,000 ml`, `1 hl in l` → `100 L`, `1 mL` → `1 ml` |
 | `cup` | 0.000236588237 | no |
 | `quart` | 0.000946352946 | no |
 | `pint` | 0.000473176473 | no |
@@ -125,7 +130,7 @@ Temperature (`FUN_0005c030`; converters `FUN_000ce960`, `FUN_000ceb20`, `FUN_000
 - celsius → kelvin `K = C + 273.15`; kelvin → celsius `C = K - 273.15`.
 - fahrenheit → kelvin `K = (F + 459.67) * 5 / 9`; kelvin → fahrenheit `F = K * 9 / 5 - 459.67`.
 - C↔F goes through kelvin, with decimal rounding at 38 digits.
-- Phrases include bare `C`, `F`, `K` (`L/Temperature.strings`).
+- Phrases include bare `C`, `F`, `K` (`L/Temperature.strings`). [oracle] `K` never reaches kelvin (it is the thousand scale) and `°C`/`°F` never match (§1.1).
 
 CSS (`FUN_00046930`; converters `FUN_000d1090`, `FUN_000d13d0`, `FUN_000cf600`, `FUN_000cfa20`) [obs]. Both units have base `m`:
 
@@ -150,6 +155,7 @@ Currency (`FUN_000476b0`; crypto `FUN_00048f90`) [obs]: one unit per code in `L/
   - ratio = `u.ratio ^ n` (decimal power, rounding up at scale 38).
   - phrases: each template in `area.templates` / `volume.templates`, applied with `String(format:)` to every phrase of `u` and to both of its symbols. English templates: area `square %@, sq %@, sq%@, %@², %@ ², %@ 2`; volume `cu %@, cubic %@, cb %@, cb%@, %@³, %@ ³, %@ 3`. So `square meter`, `sq ft`, `km²`, `cubic inch`, `cm 3` and `m3` all parse.
   - format: `area.format` `%@²` / `volume.format` `%@³` applied to `u.format`, giving `m²`, `ft²`, `″²`, `mi.²`, `km³`.
+  - [oracle] A power written with a superscript (`km²`, `m³`) behaves differently under roots: `sqrt(16 km²)` → `4 km`, `cbrt(27 m³)` → `3 m`, while `sqrt(16 m2)`, `sqrt(16 square meter)` and `sqrt(16 sq m)` → `4 m²`. Everywhere else the two spellings are the same unit. `1 m 2 kg` → `1 m²` (the template `%@ 2`, then a stray `kg`).
 
 ### 1.4 SI and IEC prefixes [obs: tables `FUN_000d1720` (SI), `FUN_000d0580` (IEC); expansion `FUN_00055c10`, `FUN_0005b4e0`]
 
@@ -159,6 +165,7 @@ IEC (name, symbol, power of 1024): kibi Ki 1, mebi Mi 2, gibi Gi 3, tebi Ti 4, p
 
 - Each prefix on an `isSiUnit` unit yields a unit with ratio `base.ratio * 10^p` (or `1024^p`), phrases `prefixName + phrase` (`kilometer`, `kilometre`) and `prefixSymbol + symbol` (`km`). The concatenation is [obs]; the exact id string is [inf].
 - `FUN_00055c10(unit, allowNegative)`: with the flag off, only prefixes with p ≥ 0 are generated. Data units pass false, so there is no `mb` (millibit). All other SI units pass true.
+- [oracle] Prefixed symbols that look like words still exist: `pm` is the picometre (`1 nm in pm` → `1,000 pm`; after a number from 1 to 12 it is still the meridiem), `nm` the nanometre (the nautical mile is `nmi`), `at` the attotonne.
 - SI units: `m`, `litre`, `gram`, `tonne`, `second`, `bit`, `byte`. IEC: `bit`, `byte`.
 
 ### 1.5 Constants (context variables) [obs: `FUN_00046370`, `FUN_00046930`]
@@ -203,7 +210,14 @@ These are ordinary variables, so a document can shadow them [inf].
 | assignment | AssignmentExtractor `FUN_0009a870` | `=` plus `equal`, `is` (`assignment.variants`) |
 | times | DateExtractor (`FUN_0009c590`) | uses `hour.variants` etc. for `3pm`, `2:30 pm` [inf] |
 
-Anything no extractor claims is free text and is ignored, so `$9 for coffee` evaluates `$9` [inf; matches documented Numi behaviour]. Unknown words between two values probably break the expression [inf].
+Anything no extractor claims is free text and is ignored, so `$9 for coffee` evaluates `$9` [inf; matches documented Numi behaviour]. Unknown words between two values do not break the expression: the second value is dropped (`5 for 3` → `5`, §2.3) [oracle].
+
+Token details the oracle settled [oracle]:
+
+- A second decimal point ends a number: `1.5.5` → `1.5`, `3.14.15 * 2` → `6.28`. `1,5` is still `15`.
+- The letter `x` multiplies after a number, a `)` or a unit (`3 x 4 m` → `12 m`, `2 m x 3` → `6 m`); glued to a following digit it is a multiplication with no left side (`x2` → `2`).
+- `GMT±n` (`GMT+3`, `gmt -5`) is one token whose offset is lost: alone the line has no result, after a time it is ignored (`3pm GMT+3` → `3:00 PM`), as a conversion target it is plain GMT (`now in GMT-5` gives UTC time). `UTC+3` is the zone `UTC` followed by `+ 3`, which adds three seconds (§8.2).
+- Variables match ignoring case and may contain spaces (§5). The longest assigned name wins. Operator words beat a variable of the same name (`in = 4` assigns, but `in * 2` → `2`); units and constants do not (`m = 5` then `m * 2` → `10`, `pi = 3` then `pi * 2` → `6`).
 
 ### 2.2 Operators [obs: definitions `FUN_0004ea10`; symbol arrays decoded from static data]
 
@@ -240,8 +254,10 @@ Numi has no postfix `!` [obs: no `!` operator or literal]. Factorial is the func
   - `a * b ^ c` = `a * (b^c)` (300 > 200); `a + b * c` = `a + (b*c)`; `5 & 3 + 1` = `5 & 4` (200 > 100). Unlike C, the bitwise operators bind tighter than `+` and `-`.
   - `in`/`to` has priority 300, the same as `^`. By the leftmost rule, `1 + 2 m in cm` converts `2 m` first and then adds. Whether Numi converts the whole line first is [unk]; `ExplicitUnitConversionMatcher` probably treats a trailing `in <unit>` separately.
 - Unary minus [obs: `FUN_00090e90` gives a `-` operator with no left operand the attribute `opPriority = 1000`]: it binds tighter than everything else, so `-2^2 = 4` and `2 * -3 = -6`. A `-` written directly before digits is already part of the number token (§2.1).
-- Parentheses are grouped and evaluated as sub-expressions [inf: `ParenthesesExtractor` plus an `opPriority` attribute that overrides operator priority when present].
-- Implicit multiplication (`2(3)`, `2 pi`, `2 x` with a variable `x`) is [unk]. The binary shows no evidence for it and Numi's docs do not mention it. Default: unsupported (Open questions).
+- Parentheses are grouped and evaluated as sub-expressions [inf: `ParenthesesExtractor` plus an `opPriority` attribute that overrides operator priority when present]. [oracle] A missing `)` leaves the line without a result (`(1 + 2`, `sqrt(16`), and so does `foo()`. A group with `;` keeps its first value (`(2; 3)` → `2`).
+- [oracle] A run of minus signs straight before a number negates once: `--5`, `- -5` and `---5` → `-5`, while `-(-5)` → `5` and `3--2` → `5`.
+- Juxtaposition [oracle]: a value followed directly by a parenthesised group multiplies, binding tighter than `^`: `2(3)` → `6`, `2 (3 + 1)` → `8`, `(2)(3)` → `6`, `x(2)` → `8`, `3(2+1)^2` → `81`, `5 m (3)` → `15 m`. A number with a unit right after a value that ends in a unit adds: `1 h 30 min` → `90 min`, `1 m 20 cm` → `120 cm`, `1 m 30 kg` → no result. Any other value after a value is dropped and the first one wins: `2 pi` → `2`, `pi 2` → `3.14`, `x x` → `4`, `(2)3` → `2`, `10 % 3` → `10 %`, `10 % 3 + 1` → `11 %`, `2 x + 1` → `3`.
+- Dangling operators are dropped [oracle]: `* 2`, `/ 2`, `+ 2` → `2`; `5 +`, `5 *` → `5`.
 
 ### 2.4 Arithmetic with units (operation implementations, `FUN_0004ff50`) [obs]
 
@@ -255,12 +271,15 @@ Each operator id has several registered implementations, tried in order; the fir
 - `mod`: `FUN_000c6650`, computed in f64 [inf: C `fmod` semantics, so the result takes the dividend's sign].
 - `&`, `|`, `xor`, `<<`, `>>`: on `integerValue`, truncated to i64 [obs: `FUN_000c64d0`].
 
-Unit rules ([obs] for addition and subtraction, [inf] for the rest):
+Unit rules [oracle] (the earlier reading, "left unit wins", was wrong):
 
-- `a + b`, `a - b`: `b` is converted to `a`'s unit first; the result keeps `a`'s unit and attributes. `5 m + 3 ft` = `5.9144 m`; `$5 + 3 EUR` gives USD. If only `b` has a unit, the result takes it [inf].
-- `a * b`: plain product, unit from whichever operand has one [inf]. Units do not compound (`m*m` does not become `m2`) [inf].
-- `a / b`: if both have units of the same category the unit drops out (a ratio); otherwise `a`'s unit stays [inf: `FUN_000c5ad0` checks `unit` after dividing].
-- Incompatible units (`5 m + 3 kg`): the conversion fails, no implementation applies, and the line has no result [inf].
+- `a + b`, `a - b`: `a` is converted to `b`'s unit and the result keeps `b`'s unit: `5 m + 3 ft` → `19.4 ft`, `3 ft + 5 m` → `5.91 m`, `1 m + 1 cm` → `101 cm`, `1 km - 1 m` → `999 m`, `0 celsius + 10 kelvin` → `283.15 K`, `$5 + 3 EUR` → euros. If only one side has a unit, the result takes it (`5 m + 3` → `8 m`, `3 + 5 m` → `8 m`, `$5 + 3` → `$8`). A percentage on the right is relative (§3).
+- `a * b`: plain product in `b`'s unit when `b` has one, otherwise in `a`'s; nothing is converted or compounded: `2 m * 3 m` → `6 m`, `5 m * 2 cm` → `10 cm`, `2 m * 3 kg` → `6 kg`, `5 kg * 2 m2` → `10 m²`, `$5 * 2 EUR` → `€ 10`, `20% * 10 m` → `200 m`, `20% * 50` → `1,000 %`.
+- `a / b`: by a plain number or a percentage the left unit stays (`10 m / 2` → `5 m`, `20% / 5` → `4 %`, `50 / 20%` → `2.5`); by a value with a unit both units drop and nothing is converted (`5 m / 2 cm` → `2.5`, `1 km / 1 m` → `1`, `6 m / 2 s` → `3`, `10 / 2 m` → `5`, `20% / 5%` → `4`).
+- `mod`: remainder of the bare numbers in the left unit (`10 m mod 3 cm` → `1 m`, `7 mod 2 m` → `1`).
+- `^`: the unit is kept, not raised (`(2 m)^2` → `4 m`).
+- The numeral system follows the same rule: the right operand's wins when it has one (`1 + 0xff` and `0xff + 1` → `0x100`, `0xff + 1e3` → `1.26E3`, `1e3 + 0xff` → `0x4e7`).
+- Incompatible units (`5 m + 3 kg`, `1 m + 1 m2`): the conversion fails and the line has no result.
 
 ---
 
@@ -281,12 +300,14 @@ Unit rules ([obs] for addition and subtraction, [inf] for the rest):
 | `a as a % on b` | AsAPercentOn `FUN_000c2d00` | `(a - b) / b * 100`, percent | `130 as a % on 100` = 30% |
 | `x + p%` | PercentageAddition `FUN_000ca200` | `x + x * p/100` | `100 + 20%` = 120 |
 | `x - p%` | PercentageSubtraction `FUN_000ca830` | `x - x * p/100` | `100 - 20%` = 80 |
-| `x * p%` | PercentageMultiplication `FUN_000ca590` | `x * p/100` | `50 * 20%` = 10 |
-| `x / p%` | none registered | falls back to DecimalDivision, `x / p` with the percent as a plain number [inf] | [unk] |
+| `x * p%` | PercentageMultiplication `FUN_000ca590` | `x * p/100`, in x's unit (also for `p% * q%` → percent) | `50 * 20%` = 10, `10 m * 20%` = `2 m`, `20% * 50%` = `10 %` [oracle] |
+| `p% * x` | DecimalMultiplication | plain product in x's unit, or percent when x has none | `20% * 50` = `1,000 %`, `20% * 10 m` = `200 m` [oracle] |
+| `x / p%` | none registered | DecimalDivision: `x / p` with the percent as a plain number | `50 / 20%` = `2.5` [oracle] |
 | `p%` alone | value with unit `percent` | – | `20%` |
 
 - The sample document (`L/Samples.strings`) has `8 / (45 - 20%)` = 8 / 36 ≈ 0.22.
-- Percent is a unit with ratio 1, so conversions only happen inside the `percent` base. Whether `0.2 in %` gives `20%` is [unk].
+- Percent is a unit with ratio 1, so conversions only happen inside the `percent` base: `0.2 in %` → `0.2 %` [oracle].
+- `rate = 5%` then `rate of 200` → `10`: a variable holding a percentage works on the left of `of`/`on`/`off` [oracle].
 
 ---
 
@@ -302,7 +323,8 @@ Unit rules ([obs] for addition and subtraction, [inf] for the rest):
 
 - `<expr> in hex | binary | bin | octal | decimal | dec | sci | scientific | exp | exponent | exponential` sets `nsystem` to `hex`, `bin`, `oct`, nothing (decimal), or `sci` [obs: `FUN_000a1680`].
 - Rendering [obs: `FUN_000ac360`, `FUN_000ae770`]:
-  - hex is `"0x"` followed by the lowercase base-16 digits of `integerValue` (the fraction is truncated). Binary uses `0b`, octal `0o`. For negative values the prefix is glued in front of Swift's signed `String(radix:)` output, giving `0x-ff` [obs]. See Open questions.
+  - hex is `"0x"` followed by the lowercase base-16 digits of `integerValue` (the fraction is truncated). Binary uses `0b`, octal `0o`. For negative values the prefix is glued in front of Swift's signed `String(radix:)` output, giving `0x-ff` [obs]. [oracle] The display is `-0xff` after all: the minus goes in front of the whole value, as for any negative number (§7); `-0.001 in hex` → `-0x0`.
+  - [oracle] A numeral-system word anywhere but after a conversion word: after a value it is ignored (`5 hex` → `5`), before one the line has no result (`hex 5`, `exp(2)`; `exp` is a scientific-notation word, there is no `exp()` function). `oct` is October, so `255 in oct` has no result (§8.1).
   - sci uses `NSNumberFormatter` scientific style with max fraction digits = precision (+1 on macOS < 10.15). en_US: `1.23E5`.
 
 ### 4.3 Scales [obs: `FUN_00051370`]
@@ -324,11 +346,15 @@ Unit rules ([obs] for addition and subtraction, [inf] for the rest):
 
 ## 5. Document semantics
 
-- Variables [obs: `AssignmentOperationMatcher`, context keys `var_<name>`]: `name = expr`, `name equal expr`, `name is expr`. Values keep their units, and the assignment line shows the assigned value [inf]. Allowed name characters and case sensitivity are [unk]. Default: letters, digits and `_`, starting with a letter, case-sensitive.
-- `prev` [obs: context `prev_result`, set after every line in `FUN_000650f0`] is the result of the line directly above. If that line had no result, `prev` is empty and the expression fails [inf].
-- `sum`/`total` and `avg`/`average` [obs: `FUN_000b09c0`, `FUN_000b40b0`]: every line appends its result, empty or not, to `prev_results`. `sum` walks backwards from the previous line and collects values until it meets an empty one (a blank line, header, comment-only line, or a line that failed). It then folds the collected values with the normal `+` operation, so unit conversion applies and incompatible units make the sum fail [inf]. `avg` is that sum divided by the count.
-  - The fold order decides the result's unit. [inf] It is the unit of the top line of the block; verify.
-- Grand total [obs: context `grand_total`, `grand_total_formatted`]: a running `+` over every line result in the document, shown in the bottom bar. Lines whose addition fails are skipped [inf].
+- Variables [obs: `AssignmentOperationMatcher`, context keys `var_<name>`]: `name = expr`, `name equal expr`, `name is expr`. Values keep their units, and the assignment line shows the assigned value [inf]. [oracle] Names ignore case (`Price = 10` then `price` → `10`) and may contain spaces (`total cost = 5`, `a b c = 3`, `The total is 5` assigns `the total`); the longest assigned name wins (`x y = 2`, `x y z = 3`, then `x y z` → `3`). A name needs a letter or `_` to be stored, but the line shows the right-hand side regardless (`5 = 3` → `3`, `a + b = 5` → `5`). `1x = 2` shows `2`, yet `1x` still reads as `1` followed by `x`. `x := 6` shows `6` and assigns nothing (`x :` is a label).
+- `prev` [obs: context `prev_result`, set after every line in `FUN_000650f0`] is the result of the line directly above. [oracle] If that line had no result, `prev` alone has no result and leaves the grand total alone, and `prev + 1` → `1`.
+- `sum`/`total` and `avg`/`average` [obs: `FUN_000b09c0`, `FUN_000b40b0`]: every line appends its result, empty or not, to `prev_results`. `sum` walks backwards from the previous line and collects values until it meets an empty one (a blank line, header, comment-only line, or a line that failed). It then folds the collected values with the normal `+` operation, so unit conversion applies and incompatible units make the sum fail. `avg` is that sum divided by the count.
+  - [oracle] Because `+` keeps the right operand's unit, the bottom line's unit wins: `1 m`, `50 cm`, `sum` → `150 cm`; `50 cm`, `1 m`, `sum` → `1.5 m`; `1 h`, `30 min`, `1 day`, `sum` → `1 day 1 h 30 min`. `sum` or `avg` with nothing above has no result. A `sum` line is part of the block below it: `1 m`, `2 m`, `sum`, `avg` → `2 m`.
+- Grand total [obs: context `grand_total`, `grand_total_formatted`]: a running `+` over every line result in the document, shown in the bottom bar. [oracle] Lines are not skipped when the addition fails. Each line does one of four things:
+  - a result is added (so the bottom line's unit wins, and `today` plus `5` is `today` plus 5 seconds);
+  - a line with nothing to calculate (blank, comment, header, unparsable text such as `sqrt of 16`) is skipped;
+  - a failed calculation (`5 m in kg`, `1 / 0`, an empty `sum`) or a result the total cannot add (`1 m` then `1 kg`) empties the total for the rest of the document;
+  - a line Numi gives an empty value (a function called with the wrong arguments such as `log 100`, or `5 m in foo`) starts the total over: `5`, `log 100`, `3` → `3`.
 - Headers: a line matching `\s*#.*` is a header, styled, with no result [obs]. It ends a `sum` block because it produces an empty value [inf].
 - Labels: in `Label: 5` the `Label:` part is ignored and the result is 5 [obs regex].
 - Comments: `//` to end of line, and `"quoted text"` anywhere in a line [obs]. A comment-only line has no result.
@@ -338,8 +364,9 @@ Unit rules ([obs] for addition and subtraction, [inf] for the rest):
 ## 6. Conversion rules
 
 - Conversion words: `in`, `into`, `as`, `to` [obs]. The target can be a unit, a currency, `percent` [inf], a numeral system (§4.2), a time zone (§8.3) or a place name (GeoNames).
+- [oracle] A conversion word followed by an unknown word fails the line (`5 m in foo`, `pi in deg`, `1 sq ft in sq in`), and so does a month (`255 in oct`). Followed by a known phrase that is not a target, or by nothing, it is ignored (`5 m in K` → `5 m`, `5 m in` → `5 m`, `1 sq in in cm2` → `1 cm²`). A bare number takes the target unit (`5 in km` → `5 km`, `pi in rad` → `3.14 rad`).
 - `ConversionOperation` only converts within one base unit. Currency goes through USD (§1.2).
-- Mixed-unit arithmetic takes the left operand's unit (§2.4).
+- Mixed-unit arithmetic takes the right operand's unit (§2.4) [oracle].
 - Mixed currencies: `$5 + 3 EUR` gives a USD result at the latest rates. With no rates (offline before the first fetch) the converters return NaN and the line has no result [obs: converters return `notANumber`].
 - A failed conversion between incompatible categories leaves the line without a result; Numi shows nothing rather than an error message [inf].
 
@@ -349,11 +376,12 @@ Unit rules ([obs] for addition and subtraction, [inf] for the rest):
 
 - Two `NSNumberFormatter`s on the user's locale: decimal style (`numberStyle = 1`) and scientific style (`4`), both with `roundingMode = 6`, which is half-up.
 - Max fraction digits = context `precision`, 2 when unset [obs: fallback `lVar14 = 2`]. The app's precision preference sets it (see `spec-ui.md`).
-- Min fraction digits is 0, except for currencies (units whose base is `USD`): if the number has exactly one fractional digit, the minimum becomes 2. So `$1.5` shows `$1.50`, while `$1.25` and `$1` stay as they are [obs: `(fractionDigitsCount == 1) * 2`].
+- Min fraction digits is 0, except for currencies (units whose base is `USD`): if the number has exactly one fractional digit, the minimum becomes 2. So `$1.5` shows `$1.50`, while `$1.25` and `$1` stay as they are [obs: `(fractionDigitsCount == 1) * 2`]. [oracle] The count is taken on the unrounded value, so an amount that only rounds to one digit keeps one: `1 ETH in USD` → `$2,430.4`.
 - Grouping follows the locale's decimal style (en_US `1,234,567.89`) [obs: decimal style groups by default].
-- There is no automatic switch to scientific notation [inf]. The decimal formatter is used unless `nsystem = sci`, so tiny numbers show as `0` at 2 decimals and huge numbers print every digit.
-- Negative numbers are formatted as their absolute value, then `-` goes in front of the whole unit template: `-$5`, `-5 m` [obs: subtract from zero, then prepend `-`].
-- Unit rendering follows §1.1. Percent's format is `%%`, and the rule turns it into `"<n> %%"`, which `String(format:)` collapses to `"20 %"`. Whether Numi actually shows `20%` or `20 %` is [unk]; check on a real install.
+- There is no automatic switch to scientific notation [inf]. The decimal formatter is used unless `nsystem = sci`, so tiny numbers show as `0` at 2 decimals and huge numbers print every digit. [oracle] Confirmed for the regular display; the `short` variant does switch (`1000000.5` → `1E6`).
+- Negative numbers are formatted as their absolute value, then `-` goes in front of the whole unit template: `-$5`, `-5 m` [obs: subtract from zero, then prepend `-`]. [oracle] The sign stays on a value that rounds to zero: `-0.001` → `-0`, `-0.001 m` → `-0 m`; the literal `-0` is `0`. Rounding is half-up in decimal: `0.125` → `0.13`, `-0.005` → `-0.01`.
+- Time values with a fractional amount [oracle] are spelled out from their own unit down to whole seconds along `yr` (365 d), `mon.` (30 d), `w`, `day`, `h`, `min`, `s`: `90 min in hours` → `1 h 30 min`, `1 year in months` → `12 mon. 5 day`, `400 days in years` → `1 yr 1 mon. 5 day`, `1 h in days` → `0 day 1 h`. Zero parts are skipped except the first; sub-second remainders are dropped (`1.999 h in h` → `1 h 59 min 56 s`). The sign goes on every non-zero part: `-90 min in h` → `-1 h -30 min`, `-30 min in h` → `0 h -30 min`. Whole amounts print plainly (`2.5 days in hours` → `60 h`), and so do seconds and prefixed units (`1.5 s`, `1.5 ms`).
+- Unit rendering follows §1.1. Percent's format is `%%`, and the rule turns it into `"<n> %%"`, which `String(format:)` collapses to `"20 %"`. Numi shows `20 %`, with an ASCII space [oracle].
 - NaN: no result is displayed [inf: the formatter compares with `notANumber` first].
 - A formatted value has `regular` and `short` variants (`FormattedValue.regularKey`/`shortKey`) [obs]. The short one is used where space is tight, e.g. dates (§8.4).
 
@@ -373,17 +401,25 @@ Unit rules ([obs] for addition and subtraction, [inf] for the rest):
 
 `current_time` is captured once per evaluation pass and stored in the context [obs: key `current_time`], so all lines of one recalculation see the same instant.
 
+[oracle] Corrections and additions to the table:
+
+- `today` is today at 12:00 local time, not the current instant; `tomorrow`/`yesterday` are ±86,400 s from it. `today + 1 hour` → `1:00 PM`, `today + 30 days` → `11/13/26, 11:00 AM` (the 30 days cross the end of DST).
+- A clock time written without am/pm and without a leading zero (`2:30`, `9:00`, `11:59`) reads as PM when its morning time has already passed and its afternoon time falls in the current hour or later; otherwise AM. At 9:41 PM: `9:00`, `9:59`, `10:05`, `11:59` → PM; `1:00`, `2:30`, `8:00` → AM. `09:30` and `00:30` are AM, `12:30` is 12:30 PM, `13:00` is 1 PM. The test is made on local time even for a zoned time (`8:00 UTC` → 10:00 AM Berlin, `10:00 UTC` → midnight).
+- `noon` and `midnight` are not phrases.
+- Month names (the en_US calendar's long and short forms, plus `sept`) with a day make a date at 12:00 local: `5 oct`, `oct 5` → `10/5/26`, `dec 5` → `12/5/26`, `oct 5 + 1 day` → `10/6/26`. `may` only works first (`may 5` → a date, `5 may` → `5`). Days past the month's end roll over (`31 feb` → `3/3/27`). The year is the current one unless that date lies far in the past: 39 days back stays in this year, 162 days back moves to next year (Numero uses 90 days as the cut-off). A month alone has no result.
+
 ### 8.2 Arithmetic [obs]
 
 - `date ± duration`: the duration is converted to seconds with the fixed ratios from §1.2, rounded, and added (`FUN_000c45e0`). `today + 1 month` adds 30 days and `+ 1 year` adds 365 days; there is no calendar arithmetic. The rounding mode and scale used here are [unk]; default to whole seconds, half-up.
-- `date - date` gives seconds as a `second` value, computed in f64 (`FUN_000c5180`). Convert with `in days` etc.
-- `fromunix(x)` / `unixtime(x)` [obs: phrases, `FUN_000b1fd0`]: date from Unix seconds, read as UTC and shown in local time.
-- `gmt` [obs: `FUN_000b24b0`]: `GMT+3` or `gmt -5` gives a fixed-offset zone of `n * 3600` seconds. Fractional hours are truncated to whole seconds [inf].
+- [oracle] A plain number added to or subtracted from a date counts as seconds: `today + 60` → `12:01 PM`, `3 + today` → `10/14/26`.
+- `date - date` gives seconds as a `second` value, computed in f64 (`FUN_000c5180`). Convert with `in days` etc. [oracle] The result is shown in the largest unit of `yr`, `mon.`, `w`, `day`, `h`, `min`, `s` that it fills at least once, then spelled out as in §7: `tomorrow - today` → `1 day`, `5pm - 9am` → `8 h`, `9am - 5pm` → `-8 h`, `(today + 10 days) - today` → `1 w 3 day`, `(today + 45 days) - today` → `1 mon. 2 w 1 day`, `(now + 90 min) - now` → `1 h 30 min`. A zero difference is `0 s`.
+- `fromunix(x)` / `unixtime(x)` [obs: phrases, `FUN_000b1fd0`]: date from Unix seconds, read as UTC and shown in local time. [oracle] Numi shifts by today's UTC offset rather than the offset at `x` (`fromunix(0)` in Berlin → `12/31/69, 11:00 PM`); Numero uses the offset at `x` (Deliberate deviations).
+- `gmt` [obs: `FUN_000b24b0`]: `GMT+3` or `gmt -5` gives a fixed-offset zone of `n * 3600` seconds. Fractional hours are truncated to whole seconds [inf]. [oracle] In practice the offset never shows: see §2.1. `now in GMT+3` gives UTC time, `3pm GMT+3` is 3 PM local, and `GMT+3` alone has no result.
 
 ### 8.3 Time zones
 
 - Abbreviations [obs: `FUN_000a9c20` reads Foundation's `TimeZone.abbreviationDictionary`, skips `GMT`, adds lower-cased phrases]. The table belongs to the OS, not to Numi. Embed a copy of the macOS dictionary [inf: from Foundation, verify on macOS]: ADT, AKDT, AKST, ART, AST, BDT, BRST, BRT, BST, CAT, CDT, CEST, CET, CLST, CLT, COT, CST, EAT, EDT, EEST, EET, EST, GMT, GST, HKT, HST, ICT, IRST, IST, JST, KST, MDT, MSD, MSK, MST, NZDT, NZST, PDT, PET, PHT, PKT, PST, SGT, TRT, UTC, WAT, WEST, WET, WIT, each mapped to an IANA id (`CET→Europe/Paris`, `EST→America/New_York`, `PST→America/Los_Angeles`, `HKT→Asia/Hong_Kong`, `IST→Asia/Kolkata`, `JST→Asia/Tokyo`, `BST→Europe/London`, `MSK→Europe/Moscow`, …). IST, CST and BST are ambiguous; follow the macOS mapping.
-- A time with a zone (`2:30 pm HKT`) goes through `TimePrefixedByTimeZoneMatcher`; `… in Berlin` or `in EST` converts through `TimeZoneConversionOperation`.
+- A time with a zone (`2:30 pm HKT`) goes through `TimePrefixedByTimeZoneMatcher`; `… in Berlin` or `in EST` converts through `TimeZoneConversionOperation`. [oracle] The zoned time is read on today's local date and shown in the local zone: `3pm EST` → `9:00 PM`, `2:30 pm HKT` → `8:30 AM`. `in <zone>` converts only `now`/`time` (`now in PST` → `12:22 PM`, `now in local`); after any other time, a date or a number it is ignored (`3pm EST in PST` → `9:00 PM`, `2:30 pm in HKT` → `2:30 PM`, `today in UTC` → `10/14/26`, `5 in PST` → `5`). A zone after a number is ignored too (`5 PST` → `5`).
 - City and place names [obs: `GeoNamesService.timeZoneIDForPlace`, `GeoNameSequenceMatcher`, `postCalculationHandleGeoNames`]: unknown words in a time context are sent to `https://s1.numi.app/timezone?q=<place>` (query parameter `q`), and the response yields an IANA zone id [inf: plain id or JSON, not seen]. Results are cached and the line is recalculated when the async reply arrives [inf]. HTTP 503 is retried up to `maxRetryCount = 4` with a "retry in …" delay [obs]. Offline, only abbreviations, `GMT±n` and `local` work. For Numero, ship an offline city→IANA table (e.g. GeoNames cities15000) instead of calling a server.
 
 ### 8.4 Output format [obs: `FUN_000ab780` creates three `DateFormatter`s on the user's locale; selection in `FUN_000aba90`]
@@ -394,7 +430,7 @@ Unit rules ([obs] for addition and subtraction, [inf] for the rest):
 | B | none | short | `3:45 PM` |
 | C | short | none | `10/14/26` |
 
-Selection [inf from the branch structure, which calls two calendar predicates `FUN_00095c10`/`FUN_00095d40`]: a value whose time falls on the current day uses B (`now`, `time`, `2:30 pm HKT in Berlin`); any other day uses A for `regular` and C for `short`. `today` and `tomorrow` carry the current clock time, so they would show a time unless one predicate tests "time is midnight" [unk]. Check what `today` prints on a real install.
+Selection [inf from the branch structure, which calls two calendar predicates `FUN_00095c10`/`FUN_00095d40`]: a value whose time falls on the current day uses B (`now`, `time`, `2:30 pm HKT in Berlin`); any other day uses A for `regular` and C for `short`. [oracle] The two predicates are "time is 12:00" and "date is today": a value at 12:00 (seconds ignored) shows only its date, which is how `today`, `tomorrow`, `12:00` and `today + 1 week` read; otherwise a value whose date, in the zone it is shown in, equals today's local date shows only the time; anything else shows both (`now in JST` → `10/15/26, 4:22 AM` in the evening in Berlin). macOS 27 puts U+202F before AM/PM; Numero uses a plain space (Deliberate deviations).
 
 ---
 
@@ -402,17 +438,23 @@ Selection [inf from the branch structure, which calls two calendar predicates `F
 
 Call syntax is `name(x)` or `name x`. Multi-argument functions take a sequence of values; `Contents/Resources/Sample.js` separates them with `;` (`zum(2;3)`). The engine has no separator literal [obs], so `;` is free text that happens to split the numbers [inf]. `log 2 (8)` reads the value before the parenthesis as the first argument [inf].
 
+Call rules [oracle]:
+
+- A function name followed by a minus sign without parentheses fails (`abs -5`, `abs - 5`, `cbrt -8`); `abs(-5)` works. A function name with no value after it fails the line (`sqrt of 16`, `abs of -5`).
+- `log` needs its base: `log 100`, `log(100)`, `log 2 8` have no result; `log(8; 2)` → `0.33` (log₈ 2), `log(2)(8)`, `log(2) (8)` and `log2(8)` → `3`, `log 0.5 (4)` → `-2`. `root 3 27` has no result; `root(3; 27)` → `3`. A wrong argument count gives the line Numi's empty value (§5).
+- An unknown name before `(` is free text: `foo(1)` → `1`, `pow(2; 3)` → `2` (the first value wins), `foo()` → no result.
+
 | function | phrases | args | behaviour |
 |---|---|---|---|
-| sqrt | `sqrt, square root` | 1 | √x (f64) |
-| cbrt | `cbrt, cubic root, cube root, cubed root` | 1 | `cbrt` (f64) |
+| sqrt | `sqrt, square root` | 1 | √x (f64), keeping the unit: `sqrt(16 m)` → `4 m`, `sqrt 2 m` → `1.41 m`, `sqrt(16 m2)` → `4 m²`, but `sqrt(16 km²)` → `4 km` (§1.3) [oracle] |
+| cbrt | `cbrt, cubic root, cube root, cubed root` | 1 | `cbrt` (f64), unit as for sqrt (`cbrt(27 m³)` → `3 m`) [oracle] |
 | root | `root` | 2 | `root n (x)` = x^(1/n); for x < 0 and odd n it returns `-((-x)^(1/n))` [obs `FUN_000b3430`] |
 | abs | `abs` | 1 | `|x|` in decimal (`0 - x` when negative) |
-| log | `log` | 2 | `log b (x)` = log2(x) / log2(b); base 1 gives NaN [obs `FUN_000b3140`]. One-argument `log x` is [unk]; default base 10 |
+| log | `log` | 2 | `log b (x)` = log2(x) / log2(b); base 1 gives NaN [obs `FUN_000b3140`]. One-argument `log x` has no result [oracle] |
 | ln | `ln` | 1 | natural log; `ln 0` gives NaN [obs `FUN_000b2a40`] |
 | fact | `fact` | 1 | `tgamma(x + 1)`, so non-integers work (`fact 0.5` ≈ 0.886) [obs `FUN_000b1c80`] |
 | sin, cos, tan | `sin`, `cos`, `tan` | 1 | a unitless argument is in degrees; `rad`/`°` units are honoured; the result is unitless [obs `FUN_000b16c0` etc.: no unit → `degree` → converted to radian] |
-| arcsin, arccos, arctan | `arcsin`, `arccos`, `arctan` | 1 | result in degrees (computed in radians, then converted) [obs `FUN_000afda0`] |
+| arcsin, arccos, arctan | `arcsin`, `arccos`, `arctan` | 1 | result in degrees (computed in radians, then converted) [obs `FUN_000afda0`], carrying the `°` unit: `arcsin(0.5)` → `30 °`, `arctan 1 in rad` → `0.79 rad` [oracle] |
 | sinh, cosh, tanh | `sinh`, `cosh`, `tanh` | 1 | plain f64, no unit handling |
 | round | `round` | 1 | to an integer with NSRoundPlain, i.e. half away from zero [obs `FUN_000b37b0`: scale 0, mode 0] |
 | ceil, floor | `ceil`, `floor` | 1 | f64 |
@@ -423,7 +465,7 @@ Call syntax is `name(x)` or `name x`. Multi-argument functions take a sequence o
 
 - There is no `pow()` or `exp()` function (use `^` and `e^x`) and `%` is never modulo [obs: not registered].
 - Constants: §1.5.
-- User extensions (JavaScriptCore, `JSNumi`): `numi.setVariable(name, {double, unitId} | number)`, `numi.addUnit({id, phrases, baseUnitId, format, ratio, internationalSymbol})`, `numi.addFunction({id, phrases}, fn(values) → {double, unitId?})` (`Contents/Resources/Sample.js`). Values cross that boundary as `{double, unitId}` (f64). For Numero this is optional, maybe a later scripting hook.
+- User extensions (JavaScriptCore, `JSNumi`): `numi.setVariable(name, {double, unitId} | number)`, `numi.addUnit({id, phrases, baseUnitId, format, ratio, internationalSymbol})`, `numi.addFunction({id, phrases}, fn(values) → {double, unitId?})` (`Contents/Resources/Sample.js`). Values cross that boundary as `{double, unitId}` (f64). Numero's `UnitSpec::international_symbol` takes `internationalSymbol`: like a built-in unit's `.symbol` (§1.1) it is one more input phrase and the symbol the unit is spelled with in ids; the output still follows `format`.
 
 ---
 
@@ -453,7 +495,7 @@ Goal: full parity with Numi 3.35 except the Alfred integration. One line per fea
 
 | Feature | Behaviour / default | Evidence | Conf |
 |---|---|---|---|
-| Decimal arithmetic | 38 significant digits, NaN instead of errors | §0 | obs |
+| Decimal arithmetic | 128-bit mantissa (38-39 digits), NaN instead of errors; f64 results through Foundation's `Decimal(Double)` | §0 | obs, oracle |
 | Units: length, area, volume, weight, time, data, angle, temperature, CSS | tables and ratios | §1.2 | obs |
 | Square/cube units from templates | `square %@`, `%@²`, `cubic %@`… on m, SI metres, inch, foot, yard, mile | §1.3 | obs |
 | SI and IEC prefixes | 20 SI, 8 IEC; data units take positive SI only | §1.4 | obs |
@@ -468,7 +510,7 @@ Goal: full parity with Numi 3.35 except the Alfred integration. One line per fea
 | Unary minus binding tighter than `^` | | §2.3 | obs |
 | Parentheses | | §2.3 | inf |
 | Conversion words in/into/as/to | | §6 | obs |
-| Mixed-unit arithmetic (left unit wins) | | §2.4 | obs |
+| Mixed-unit arithmetic (right unit wins for `+ − ×`, `/` by a unit drops units) | | §2.4 | oracle |
 | 12 percent operations | of/on/off, …what is, as a % of/on/off, x ± p%, x × p% | §3 | obs |
 | Variables with `=`, `equal`, `is` | | §5 | obs |
 | `prev`, `sum`/`total`, `avg`/`average` | block ends at an empty line | §5 | obs |
@@ -477,7 +519,7 @@ Goal: full parity with Numi 3.35 except the Alfred integration. One line per fea
 | Free text ignored | | §2.1 | inf |
 | Functions sqrt, cbrt, root, abs, log, ln, fact, trig (degrees), arc-trig, hyperbolic, round, ceil, floor | | §9 | obs |
 | Dates today/tomorrow/yesterday/now/time, date arithmetic | fixed 30-day month, 365-day year | §8.1-8.2 | obs |
-| `fromunix`/`unixtime`, `GMT±n`, `local` | | §8.2 | obs |
+| `fromunix`/`unixtime`, `GMT±n`, `local` | `GMT±n` loses its offset | §8.2 | obs, oracle |
 | Time zone abbreviations and conversion | macOS abbreviation table | §8.3 | obs |
 | City names (`Berlin time`, `time in New York`) | online GeoNames lookup in Numi; offline table for Numero | §8.3 | obs |
 | Date output: short date/time styles on user locale | | §8.4 | obs/inf |
@@ -623,7 +665,7 @@ Top-level order: Numi, File, Edit, Window, Help, Demo. Cmd = ⌘, Opt = ⌥, Shi
 | Errors | JS exception handler logs "Error on line N: message" (uses the exception's `line`) | `UI@0xb6e00` | obs |
 | Globals | `numi` (a `JSNumi` object) and a global `log(...)` function | `UI@0xb6b30` | obs |
 | `numi.setVariable(name, value)` | Defines a global variable; value is a number or a value dict `{double|decimal, unit?, unitId?}` | `UI@0xb5a40`, `Sample.js` | obs |
-| `numi.addUnit(dict)` | Dict keys: `id`, `phrases` (comma list), `baseUnitId`, `format`, `ratio`, `internationalSymbol` | `UI@0xb7cc0`, `Sample.js` | obs |
+| `numi.addUnit(dict)` | Dict keys: `id`, `phrases` (comma list), `baseUnitId`, `format`, `ratio`, `internationalSymbol` (Numero: an extra phrase and the unit's symbol, §9) | `UI@0xb7cc0`, `Sample.js` | obs |
 | `numi.addFunction(dict, fn)` | Dict keys `id`, `phrases`; `fn(values)` receives value dicts, returns `{double: …}`; call syntax `zum(2;3)` | `UI@0xb5c50`, `0xb7370`, `Sample.js` | obs |
 | JS value dict | keys `double`, `decimal`, `unit`, `unitId`, plus a `type` key read on results | `UI@0xb7620`, `0xb84d0`, `0xb8ee0` | obs |
 | Other JSNumi members | none: `JSNumi` instance methods are only `setVariable::`, `addUnit:`, `addFunction::` (plus init/destruct) | `UI` symbols `JSNumi::*` | obs |
@@ -703,11 +745,22 @@ Top-level order: Numi, File, Edit, Window, Help, Demo. Cmd = ⌘, Opt = ⌥, Shi
 
 1. Exactness or fidelity? Numi's acre (4046.86), nautical mile (1853.184), point (0.00035277777), month (30 d) and year (365 d) differ from the standard values. Options: (a) copy Numi exactly, (b) use the standard values, (c) copy Numi and add the standard units under other names. Default taken: (a), for result parity.
 2. Unwired vocabulary (`cbinch` = `cu inch, cui, CI, c.i.`; `cbcm` = `cc, ccm`): (a) ignore them as Numi does, (b) map them to `inch3`/`cm3`. Default: (b). It breaks nothing and matches what the strings file intends.
-3. Associativity of `^`: the binary evaluates leftmost first (`2^3^2 = 64`). (a) copy that, (b) make `^` right-associative (512). Default: (a), pending one test on a real install.
-4. Implicit multiplication (`2(3)`, `2 pi`): (a) unsupported, as Numi appears to be, (b) support it. Default: (a).
-5. Negative hex/bin/oct output (`0x-ff`): (a) copy it, (b) print `-0xff`. Default: (b).
+3. Associativity of `^`: the binary evaluates leftmost first (`2^3^2 = 64`). Answered [oracle]: Numi gives `64`, and `-2^2` → `4`. Numero copies it.
+4. Implicit multiplication (`2(3)`, `2 pi`): answered [oracle]. Only a value followed by a parenthesised group multiplies; any other second value is dropped (§2.3). Numero copies it.
+5. Negative hex/bin/oct output (`0x-ff`): answered [oracle]. Numi already prints `-0xff` (§4.2).
 6. Global hotkey: Numi 3.35 ships none (§12.4). (a) none, as in Numi, (b) a default such as Ctrl+Opt+Space. Default: (a).
 7. Document storage: Numi keeps one `.txt` per calculation in iCloud Drive or Application Support (§12.9). (a) local folder of UTF-8 `.txt` files, (b) the same plus a user-chosen synced folder later. Default: (a).
 8. First-launch theme: Numi defaults to night mode (`nightTheme = true`). (a) dark by default, (b) follow the system. Default: (a).
 9. Peripheral features: the Today widget (`NumiExtension.appex`), the `numi://` scheme (registered, no handler found), QuickType hints (no UI in 3.35), Sparkle updates, licensing and telemetry. (a) skip all, (b) add update checks only. Default: (a).
-10. Worth one short session on a real Numi 3.35: `20%` vs `20 %`; what `today` prints; one-argument `log 100`; the unit of `sum` over mixed units; `x / 20%`; `2:30 pm` against the label regex; the result unit of `$5 * 2 EUR`.
+10. Answered by the oracle (`~/re/numi/oracle`, which runs Numi's own engine): `20 %` with a space; `today` prints the date (§8.1, §8.4); `log 100` has no result; `sum` takes the bottom line's unit; `50 / 20%` → `2.5`; `2:30 pm` is a time, also after `Meeting:`; `$5 * 2 EUR` → `€ 10`.
+
+---
+
+## Deliberate deviations from Numi
+
+Numero matches Numi 3.35 as the oracle shows it, except here. `crates/numero-engine/tests/oracle.rs` lists every row these touch.
+
+1. Crypto coin codes do not shadow other phrases. Once Numi loads `coins2.json`, coins named `C`, `F`, `K`, `B`, `T`, `G`, `S`, `GMT`, `JST` and others take those phrases over, so `0 C in F` converts between two coins, `1 kB in B` and `now in JST` have no result, and `5 G` is a coin. Numero keeps temperature, data units, scales and time zones; its results equal Numi's before the first rate fetch (the oracle's offline run).
+2. Times use a plain space before AM/PM (`2:30 PM`). macOS 27's date formatter puts U+202F there.
+3. `fromunix(x)` and `unixtime(x)` use the UTC offset in effect at `x`. Numi applies today's offset (`fromunix(0)` in Berlin in October → `12/31/69, 11:00 PM`), which is a bug: the instant shown is not the instant meant.
+4. City names (`now in Berlin`, `time in Tokyo`) come from an offline table (§8.3). Numi asks `s1.numi.app` and had no answer during the oracle runs, so it showed nothing.

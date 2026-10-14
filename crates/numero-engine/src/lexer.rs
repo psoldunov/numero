@@ -4,16 +4,20 @@
 //!
 //! Numbers follow Numi's extractor (§2.1, §4.1): digits may be grouped
 //! with spaces, `_` and the grouping separator (`1 234`, `1_234`,
-//! `1,234.5`), and a number cannot end in a separator. `0x`, `0b`, `0o`
+//! `1,234.5`), and a number cannot end in a separator. A second decimal
+//! point ends the number (`1.5.5` is `1.5` then `.5`). `0x`, `0b`, `0o`
 //! and `1e3` literals remember their numeral system, so they print back
 //! the same way.
+//!
+//! Variables match case-insensitively and may contain spaces (`total
+//! cost`); the longest assigned name wins, but operator words (`in`, `of`)
+//! still beat a variable of the same name (§5).
 
 use std::ops::Range;
 
 use crate::num::Num;
 use crate::trie::is_word_char;
 use crate::vocab::{Meaning, NumFmt, Vocab};
-use crate::zones;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Sym {
@@ -34,11 +38,13 @@ pub enum Sym {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Tok {
     Num(Num, NumFmt),
-    /// A clock time such as `14:30` or `2:30:15`.
+    /// A clock time such as `14:30` or `2:30:15`; `padded` when the hour
+    /// was written with a leading zero (`09:30`), which rules out PM.
     Time {
         hour: u32,
         minute: u32,
         second: u32,
+        padded: bool,
     },
     /// `am` (false) or `pm` (true) after a time or an hour.
     Meridiem(bool),
@@ -67,13 +73,14 @@ pub struct NumberStyle {
     pub decimal: char,
 }
 
-/// Tokenize `line[start..]`; spans index into `line`.
+/// Tokenize `line[start..]`; spans index into `line`. `vars` holds the
+/// assigned variable names, lower-cased with single spaces.
 pub fn lex(
     line: &str,
     start: usize,
     vocab: &Vocab,
     style: NumberStyle,
-    is_var: &dyn Fn(&str) -> bool,
+    vars: &[String],
 ) -> Vec<Token> {
     let mut lexer = Lexer {
         line,
@@ -81,7 +88,7 @@ pub fn lex(
         tokens: Vec::new(),
         vocab,
         style,
-        is_var,
+        vars,
     };
     lexer.run();
     lexer.tokens
@@ -93,7 +100,7 @@ struct Lexer<'a> {
     tokens: Vec<Token>,
     vocab: &'a Vocab,
     style: NumberStyle,
-    is_var: &'a dyn Fn(&str) -> bool,
+    vars: &'a [String],
 }
 
 impl Lexer<'_> {
@@ -108,7 +115,12 @@ impl Lexer<'_> {
                     .find('"')
                     .map_or(self.line.len(), |p| self.i + p + 2);
                 self.push(Tok::Comment, end);
-            } else if !self.number() && !self.meridiem() && !self.times_x() && !self.gmt_offset() {
+            } else if !self.number()
+                && !self.meridiem()
+                && !self.variable()
+                && !self.times_x()
+                && !self.gmt_offset()
+            {
                 self.word_or_symbol(c);
             }
         }
@@ -194,14 +206,23 @@ impl Lexer<'_> {
         true
     }
 
-    /// `x` between two numbers multiplies: `3 x 4`, `3x4`.
+    /// `x` between two numbers multiplies: `3 x 4`, `3x4`, `2 m x 3`; so
+    /// does an `x` glued to the number after it (`x2`, which then has no
+    /// left operand).
     fn times_x(&mut self) -> bool {
-        if self.peek() != Some('x') || !matches!(self.prev(), Some(Tok::Num(..) | Tok::RParen)) {
+        let after = self.rest().get(1..).unwrap_or("");
+        let glued = after.chars().next().is_some_and(|c| c.is_ascii_digit());
+        let after_value = match self.prev() {
+            Some(Tok::Num(..) | Tok::RParen) => true,
+            Some(Tok::Phrase(ms)) => ms
+                .iter()
+                .any(|m| matches!(m, Meaning::Unit(_) | Meaning::Currency(_))),
+            _ => false,
+        };
+        if self.peek() != Some('x') || !(after_value || glued && self.at_word_boundary()) {
             return false;
         }
-        let after = &self.rest()[1..];
         let next = after.trim_start().chars().next();
-        let glued = after.chars().next().is_some_and(|c| c.is_ascii_digit());
         let alone = !after.chars().next().is_some_and(is_word_char);
         if (glued || alone) && next.is_some_and(|c| c.is_ascii_digit() || c == '(' || c == '.') {
             self.push(Tok::Sym(Sym::Times), self.i + 1);
@@ -210,29 +231,57 @@ impl Lexer<'_> {
         false
     }
 
-    /// `GMT+3`, `utc -5`, `gmt+5:30`… as a fixed-offset zone (§8.2).
-    fn gmt_offset(&mut self) -> bool {
-        let rest = self.rest();
-        let Some(head) = rest.get(..3) else {
+    /// The longest assigned variable name at this position, unless an
+    /// operator word of at least the same length starts here (`in = 4`
+    /// assigns, but `in * 2` still reads `in` as the conversion word).
+    fn variable(&mut self) -> bool {
+        if !self.peek().is_some_and(|c| c.is_alphabetic() || c == '_') || !self.at_word_boundary() {
+            return false;
+        }
+        let Some(len) = self
+            .vars
+            .iter()
+            .filter_map(|name| match_name(self.rest(), name))
+            .max()
+        else {
             return false;
         };
-        if !(head.eq_ignore_ascii_case("gmt") || head.eq_ignore_ascii_case("utc"))
-            || !self.at_word_boundary()
+        let end = self.i + len;
+        let operator = self
+            .vocab
+            .trie
+            .longest_match(self.line, self.i)
+            .is_some_and(|m| m.end >= end && m.meanings.iter().copied().any(is_operator_word));
+        if operator {
+            return false;
+        }
+        let name = normalize_name(&self.line[self.i..end]);
+        self.push(Tok::Var(name), end);
+        true
+    }
+
+    /// `GMT+3`, `gmt -5`, `GMT+5:30` as one token (see
+    /// [`Meaning::GmtOffset`]). `UTC+3` is the zone `UTC` and then `+ 3`.
+    fn gmt_offset(&mut self) -> bool {
+        let rest = self.rest();
+        if !rest.get(..3).is_some_and(|h| h.eq_ignore_ascii_case("gmt")) || !self.at_word_boundary()
         {
             return false;
         }
-        let after = &rest[3..];
-        let signed = after.trim_start();
-        let Some(sign) = signed
+        let after = rest[3..].trim_start();
+        let Some(sign) = after
             .chars()
             .next()
             .filter(|c| matches!(c, '+' | '-' | '−'))
         else {
             return false;
         };
-        let digits_part = signed[sign.len_utf8()..].trim_start();
-        let digits = digits_part.bytes().take_while(u8::is_ascii_digit).count();
-        if !(1..=2).contains(&digits)
+        let digits_part = after[sign.len_utf8()..].trim_start();
+        let digits = digits_part
+            .bytes()
+            .take_while(|b| b.is_ascii_digit() || *b == b':')
+            .count();
+        if digits == 0
             || digits_part[digits..]
                 .chars()
                 .next()
@@ -240,13 +289,8 @@ impl Lexer<'_> {
         {
             return false;
         }
-        let hours: i64 = digits_part[..digits].parse().unwrap_or(0);
-        let hours = if sign == '+' { hours } else { -hours };
-        let Some(tz) = zones::fixed_offset(hours) else {
-            return false;
-        };
         let len = rest.len() - digits_part.len() + digits;
-        self.push(Tok::Phrase(vec![Meaning::Zone(tz)]), self.i + len);
+        self.push(Tok::Phrase(vec![Meaning::GmtOffset]), self.i + len);
         true
     }
 
@@ -256,15 +300,14 @@ impl Lexer<'_> {
             .find(|ch: char| !is_word_char(ch))
             .unwrap_or(self.rest().len());
         let at_boundary = self.at_word_boundary();
-        if word_len > 0 && at_boundary && (self.is_var)(&self.rest()[..word_len]) {
-            let name = self.rest()[..word_len].to_string();
-            self.push(Tok::Var(name), self.i + word_len);
-            return;
-        }
         if (at_boundary || !is_word_char(c))
             && let Some(m) = self.vocab.trie.longest_match(self.line, self.i)
         {
             self.push(Tok::Phrase(m.meanings), m.end);
+            return;
+        }
+        if at_boundary && let Some((meanings, len)) = self.function_before_digit(word_len) {
+            self.push(Tok::Phrase(meanings), self.i + len);
             return;
         }
         if let Some((tok, len)) = symbol(self.rest()) {
@@ -274,6 +317,77 @@ impl Lexer<'_> {
         let len = if word_len > 0 { word_len } else { c.len_utf8() };
         self.push(Tok::Ident, self.i + len);
     }
+}
+
+impl Lexer<'_> {
+    /// `log2(8)`: a function name glued to the number after it.
+    fn function_before_digit(&self, word_len: usize) -> Option<(Vec<Meaning>, usize)> {
+        let rest = self.rest();
+        let letters = rest.find(|c: char| !c.is_alphabetic())?;
+        if letters == 0
+            || letters >= word_len
+            || !rest[letters..].starts_with(|c: char| c.is_ascii_digit())
+        {
+            return None;
+        }
+        let head = &self.line[..self.i + letters];
+        let m = self.vocab.trie.longest_match(head, self.i)?;
+        let functions: Vec<Meaning> = m
+            .meanings
+            .into_iter()
+            .filter(|m| matches!(m, Meaning::Func(_)))
+            .collect();
+        (m.end == head.len() && !functions.is_empty()).then_some((functions, letters))
+    }
+}
+
+/// Operator and keyword meanings that beat a variable of the same name.
+fn is_operator_word(meaning: Meaning) -> bool {
+    matches!(
+        meaning,
+        Meaning::Conversion
+            | Meaning::Assign
+            | Meaning::Plus
+            | Meaning::Minus
+            | Meaning::Times
+            | Meaning::Divide
+            | Meaning::Mod
+            | Meaning::Xor
+            | Meaning::Pct(_)
+            | Meaning::Percent
+    )
+}
+
+/// A variable name as stored: lower case, whitespace runs folded to one
+/// space.
+pub fn normalize_name(text: &str) -> String {
+    text.split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .to_lowercase()
+}
+
+/// Byte length of `rest`'s prefix that spells `name` (lower case, single
+/// spaces) ignoring case, ending on a word boundary.
+fn match_name(rest: &str, name: &str) -> Option<usize> {
+    let mut text = rest.char_indices().peekable();
+    let mut end = 0;
+    for expected in name.chars() {
+        let (i, c) = text.next()?;
+        if expected == ' ' {
+            if !c.is_whitespace() {
+                return None;
+            }
+            while text.peek().is_some_and(|(_, w)| w.is_whitespace()) {
+                text.next();
+            }
+        } else if !c.to_lowercase().eq(std::iter::once(expected)) {
+            return None;
+        }
+        end = i + c.len_utf8();
+    }
+    let boundary = text.peek().is_none_or(|(_, c)| !is_word_char(*c));
+    (end > 0 && boundary).then_some(end)
 }
 
 fn symbol(rest: &str) -> Option<(Tok, usize)> {
@@ -333,6 +447,7 @@ fn clock_time(rest: &str) -> Option<(Tok, usize)> {
             hour,
             minute,
             second,
+            padded: h_len == 2 && bytes[0] == b'0',
         },
         len,
     ))
@@ -360,9 +475,15 @@ fn radix_literal(rest: &str) -> Option<(Num, NumFmt, usize)> {
 fn decimal_literal(rest: &str, decimal: char) -> (String, usize, bool) {
     let is_separator = |c: char| c == ' ' || c == '_' || c == ',' || c == '.' || c == '\u{a0}';
     let mut end = 0;
+    let mut points = 0;
     for (i, c) in rest.char_indices() {
         if c.is_ascii_digit() {
             end = i + 1;
+        } else if c == decimal {
+            points += 1;
+            if points > 1 {
+                break;
+            }
         } else if !is_separator(c) {
             break;
         }
@@ -406,7 +527,7 @@ mod tests {
     const EN: NumberStyle = NumberStyle { decimal: '.' };
 
     fn kinds(line: &str) -> Vec<Tok> {
-        lex(line, 0, &english(), EN, &|_| false)
+        lex(line, 0, &english(), EN, &[])
             .into_iter()
             .map(|t| t.tok)
             .collect()
@@ -441,17 +562,46 @@ mod tests {
     }
 
     #[test]
-    fn clock_times_meridiem_and_offsets() {
+    fn clock_times_and_meridiem() {
         assert_eq!(kinds("2:30 pm")[1], Tok::Meridiem(true));
         assert_eq!(kinds("3pm")[1], Tok::Meridiem(true));
-        assert!(matches!(&kinds("GMT+3")[0], Tok::Phrase(m) if matches!(m[0], Meaning::Zone(_))));
-        assert!(matches!(&kinds("gmt -5")[0], Tok::Phrase(m) if matches!(m[0], Meaning::Zone(_))));
+        assert!(matches!(kinds("09:30")[0], Tok::Time { padded: true, .. }));
+        assert!(matches!(kinds("9:30")[0], Tok::Time { padded: false, .. }));
+        // `GMT+3` is one token; `UTC+3` is the zone and `+ 3` (§8.2 [oracle]).
+        assert_eq!(kinds("GMT+3"), vec![Tok::Phrase(vec![Meaning::GmtOffset])]);
+        assert_eq!(kinds("gmt -5"), vec![Tok::Phrase(vec![Meaning::GmtOffset])]);
+        assert_eq!(kinds("UTC+3")[1], Tok::Sym(Sym::Plus));
+    }
+
+    #[test]
+    fn a_second_decimal_point_ends_the_number() {
+        assert_eq!(kinds("1.5.5"), vec![num("1.5"), num(".5")]);
+    }
+
+    #[test]
+    fn variables_ignore_case_and_may_hold_spaces() {
+        let vars = ["total cost".to_string(), "in".to_string()];
+        let toks = |line: &str| -> Vec<Tok> {
+            lex(line, 0, &english(), EN, &vars)
+                .into_iter()
+                .map(|t| t.tok)
+                .collect()
+        };
+        assert_eq!(toks("Total  Cost * 2")[0], Tok::Var("total cost".into()));
+        assert!(matches!(&toks("in * 2")[0], Tok::Phrase(_)));
+        assert_eq!(toks("total costs")[0], Tok::Phrase(vec![Meaning::Sum]));
+    }
+
+    #[test]
+    fn function_names_glue_to_digits() {
+        assert!(matches!(&kinds("log2(8)")[0], Tok::Phrase(m) if matches!(m[0], Meaning::Func(_))));
+        assert_eq!(kinds("log2(8)")[1], num("2"));
     }
 
     #[test]
     fn spans_are_ordered_and_disjoint() {
         let line = "$9 for coffee + 5 km in miles // note";
-        let tokens = lex(line, 0, &english(), EN, &|_| false);
+        let tokens = lex(line, 0, &english(), EN, &[]);
         for pair in tokens.windows(2) {
             assert!(pair[0].span.end <= pair[1].span.start);
         }

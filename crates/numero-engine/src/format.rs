@@ -1,7 +1,8 @@
 //! Number display (§7): at most `Config::precision` fraction digits,
 //! trailing zeros trimmed, halves rounded up (away from zero), integer
-//! digits grouped. Currency amounts with exactly one fraction digit get a
-//! second (`$1.50`). There is no automatic scientific notation: tiny values
+//! digits grouped. A currency amount written with exactly one fraction
+//! digit gets a second (`$1.50`); one that only rounds to a single digit
+//! keeps it (`$2,430.4`) (§7 [oracle]). There is no automatic scientific notation: tiny values
 //! show as `0` and huge ones print every digit. `in sci` uses `1.23E5`,
 //! `in hex` lowercase digits of the truncated integer.
 
@@ -13,17 +14,18 @@ use crate::vocab::NumFmt;
 
 pub fn number(n: Num, config: &Config, currency: bool) -> String {
     let precision = u32::try_from(config.precision).unwrap_or(10);
-    let text = match n.to_decimal() {
-        Some(d) => d
+    let text = match (n, n.to_decimal()) {
+        (Num::Big(b), _) => b.round_dp(precision).abs().digits(),
+        (_, Some(d)) => d
             .round_dp_with_strategy(precision, RoundingStrategy::MidpointAwayFromZero)
             .normalize()
             .abs()
             .to_string(),
-        None => float_text(n.to_f64().abs(), config.precision),
+        (_, None) => float_text(n.to_f64().abs(), config.precision),
     };
     let (int, frac) = text.split_once('.').unwrap_or((&text, ""));
     let mut frac = frac.to_string();
-    if currency && frac.len() == 1 {
+    if currency && frac.len() == 1 && exact_fraction_digits(n) == Some(1) {
         frac.push('0');
     }
     let mut out = String::with_capacity(text.len() + 8);
@@ -36,6 +38,18 @@ pub fn number(n: Num, config: &Config, currency: bool) -> String {
         out.push_str(&frac);
     }
     out
+}
+
+/// How many fraction digits the unrounded value has.
+fn exact_fraction_digits(n: Num) -> Option<u32> {
+    match n {
+        Num::Big(b) => Some(
+            b.digits()
+                .split_once('.')
+                .map_or(0, |(_, f)| u32::try_from(f.len()).unwrap_or(u32::MAX)),
+        ),
+        _ => n.to_decimal().map(|d| d.normalize().scale()),
+    }
 }
 
 /// A float too large for a decimal, as plain digits with zeros trimmed.

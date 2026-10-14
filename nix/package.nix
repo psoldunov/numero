@@ -7,7 +7,7 @@
   lib,
   rustPlatform,
   pkg-config,
-  makeBinaryWrapper,
+  patchelf,
   desktop-file-utils,
   fontconfig,
   freetype,
@@ -21,7 +21,7 @@
 
 let
   # GPUI opens these with dlopen at runtime, so linking alone does not put
-  # them where the loader looks.
+  # them on the app's rpath.
   gpuiRuntimeLibraries = [
     libglvnd
     libx11
@@ -32,6 +32,9 @@ let
   ];
 
   assets = "crates/numero-app/assets/linux";
+  # The Wayland app_id, which the GlobalShortcuts portal and the compositor
+  # find the launcher entry by; the same id as the macOS bundle's.
+  appId = "dev.soldunov.numero";
 in
 rustPlatform.buildRustPackage {
   pname = "numero";
@@ -67,7 +70,7 @@ rustPlatform.buildRustPackage {
 
   nativeBuildInputs = [
     pkg-config
-    makeBinaryWrapper
+    patchelf
     desktop-file-utils
     # QuickJS, behind the extensions, is C built by rquickjs's build script,
     # which may generate bindings with bindgen.
@@ -82,14 +85,19 @@ rustPlatform.buildRustPackage {
 
   postInstall = ''
     bash packaging/linux/desktop-entry.sh ${assets}/numero.desktop \
-      $out/share/applications/numero.desktop $out/bin/numero-app
+      $out/share/applications/${appId}.desktop $out/bin/numero-app
 
     mkdir -p $out/share/icons
     cp -r ${assets}/icons/hicolor $out/share/icons/hicolor
     chmod -R u+w $out/share/icons
+  '';
 
-    wrapProgram $out/bin/numero-app \
-      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath gpuiRuntimeLibraries}
+  # After fixup, which shrinks the rpath to the libraries the binary links.
+  # An rpath rather than an LD_LIBRARY_PATH wrapper, so the variable does not
+  # leak into what the app starts (xdg-open, the file manager).
+  postFixup = ''
+    patchelf --add-rpath ${lib.makeLibraryPath gpuiRuntimeLibraries} \
+      $out/bin/numero-app
   '';
 
   doInstallCheck = true;
@@ -101,10 +109,12 @@ rustPlatform.buildRustPackage {
     test -x $out/bin/numero
     echo '1 + 1' | $out/bin/numero --no-extensions
 
-    desktop-file-validate $out/share/applications/numero.desktop
-    grep -qx "Exec=$out/bin/numero-app %U" $out/share/applications/numero.desktop
-    grep -qx 'MimeType=x-scheme-handler/numero;text/plain;' \
-      $out/share/applications/numero.desktop
+    entry=$out/share/applications/${appId}.desktop
+    desktop-file-validate $entry
+    grep -qx "Exec=$out/bin/numero-app %U" $entry
+    grep -qx 'MimeType=x-scheme-handler/numero;' $entry
+    grep -qx 'StartupWMClass=${appId}' $entry
+    grep -qx 'Icon=numero' $entry
     test -f $out/share/icons/hicolor/256x256/apps/numero.png
     test -f $out/share/icons/hicolor/symbolic/apps/numero-symbolic.svg
 

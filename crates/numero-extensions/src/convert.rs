@@ -49,8 +49,7 @@ pub fn value_dict<'js>(ctx: &Ctx<'js>, value: &ScriptValue) -> rquickjs::Result<
     Ok(dict)
 }
 
-/// `numi.addUnit`'s dictionary. `internationalSymbol` is accepted and
-/// ignored: the engine has nowhere to put it yet.
+/// `numi.addUnit`'s dictionary.
 pub fn unit_spec(dict: &Object<'_>) -> Result<UnitSpec, String> {
     let id = required_string(dict, "id")?;
     Ok(UnitSpec {
@@ -58,6 +57,7 @@ pub fn unit_spec(dict: &Object<'_>) -> Result<UnitSpec, String> {
         base_unit_id: required_string(dict, "baseUnitId")?,
         format: string_field(dict, "format")?.unwrap_or_else(|| id.clone()),
         ratio: number_field(dict, "ratio")?.ok_or("missing \"ratio\"")?,
+        international_symbol: string_field(dict, "internationalSymbol")?,
         id,
     })
 }

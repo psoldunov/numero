@@ -1,5 +1,6 @@
-//! Time zones by abbreviation (`PST`, `HKT`), by fixed offset (`GMT+3`)
-//! and by city (`Berlin`, `New York`), offline. Abbreviations name the
+//! Time zones by abbreviation (`PST`, `HKT`) and by city (`Berlin`, `New
+//! York`), offline. There are no fixed offsets: Numi reads `GMT+3` as the
+//! zone `GMT` followed by `+ 3` (§8.2 [oracle]). Abbreviations name the
 //! region's zone, so `PST` means Los Angeles time and follows its daylight
 //! saving, the way macOS's `TimeZone(abbreviation:)` resolves them.
 
@@ -125,20 +126,6 @@ pub fn add_zone_phrases(trie: &mut Trie) {
         }
         trie.insert(&city.replace('_', " "), false, Meaning::Zone(tz));
     }
-}
-
-/// `GMT±n` / `UTC±n` (§8.2) as an `Etc/GMT∓n` zone: whole hours only,
-/// from −12 to +14.
-pub fn fixed_offset(hours: i64) -> Option<Tz> {
-    if !(-12..=14).contains(&hours) {
-        return None;
-    }
-    let name = match hours {
-        0 => "Etc/GMT".to_string(),
-        h if h > 0 => format!("Etc/GMT-{h}"),
-        h => format!("Etc/GMT+{}", -h),
-    };
-    name.parse().ok()
 }
 
 /// Whether chrono-tz knows an IANA zone name.

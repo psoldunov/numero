@@ -255,11 +255,14 @@ pub const PREFIXES: &[Prefix] = &[
 
 /// A concrete unit: a definition, an optional prefix, and a power (2 and 3
 /// build square and cubic units from a length, `km²`, `cubic inch`).
+/// `superscript` marks a power written as `²`/`³`: `sqrt(16 km²)` is
+/// `4 km`, while `sqrt(16 km2)` stays `4 km²` (§9 [oracle]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct UnitRef {
     pub def: u16,
     pub prefix: Option<u8>,
     pub power: u8,
+    pub superscript: bool,
 }
 
 /// Document-level settings that CSS units depend on.
@@ -275,11 +278,16 @@ impl UnitRef {
             def: u16::try_from(def).unwrap_or(u16::MAX),
             prefix: None,
             power: 1,
+            superscript: false,
         }
     }
 
     pub fn with_power(self, power: u8) -> Self {
-        Self { power, ..self }
+        Self {
+            power,
+            superscript: false,
+            ..self
+        }
     }
 
     pub fn prefix(self) -> Option<&'static Prefix> {
@@ -297,11 +305,6 @@ pub trait UnitTable {
             3 => Dim::Volume,
             _ => self.unit_def(unit).dim,
         }
-    }
-
-    /// True for length units and their squares and cubes.
-    fn is_length_family(&self, unit: UnitRef) -> bool {
-        self.unit_def(unit).dim == Dim::Length
     }
 
     /// Base units per one of `unit`.

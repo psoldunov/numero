@@ -1,7 +1,9 @@
-# Numero's launcher entry. Install as applications/numero.desktop under
-# $XDG_DATA_HOME (~/.local/share) or /usr/share, with icons/hicolor beside
-# it. The file name must match the app's Wayland app_id, "numero", so the
-# compositor finds this entry and its icon for the window.
+# Numero's launcher entry. Packaging installs it as
+# applications/dev.soldunov.numero.desktop under $XDG_DATA_HOME
+# (~/.local/share) or /usr/share, with icons/hicolor beside it, and patches
+# in Exec, MimeType and StartupWMClass (packaging/linux/desktop-entry.sh).
+# The installed name must match the app's Wayland app_id,
+# "dev.soldunov.numero", so the compositor finds this entry and its icon.
 [Desktop Entry]
 Type=Application
 Name=Numero

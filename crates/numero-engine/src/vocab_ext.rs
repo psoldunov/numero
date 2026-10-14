@@ -84,11 +84,13 @@ impl Vocab {
         })
     }
 
-    /// Register an extension unit: `ratio` base units per one of it.
+    /// Register an extension unit: `ratio` base units per one of it. Its
+    /// `symbol` (Numi's `internationalSymbol`) is one more phrase.
     pub fn add_unit(
         &mut self,
         id: &str,
         phrases: &str,
+        symbol: Option<&str>,
         base: UnitRef,
         ratio: Num,
         format: &str,
@@ -113,10 +115,11 @@ impl Vocab {
         } else {
             format.to_string()
         };
-        self.unit_symbols.push(format.clone());
+        self.unit_symbols
+            .push(symbol.map_or_else(|| format.clone(), str::to_string));
         self.unit_formats.push(format);
         let unit = UnitRef::plain(self.units.len() - 1);
-        for phrase in split_variants(phrases).chain(std::iter::once(id)) {
+        for phrase in split_variants(phrases).chain([id]).chain(symbol) {
             self.insert(phrase, Meaning::Unit(unit));
         }
         Some(unit)

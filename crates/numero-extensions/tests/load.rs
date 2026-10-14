@@ -47,8 +47,9 @@ fn seeds_default_js_into_a_missing_folder() {
     assert!(seeded.contains("restart Numero"));
     assert_eq!(loading_lines(&log), ["Default.js"]);
     assert_eq!(log.errors().count(), 0, "{log:?}");
-    // The examples are commented out, so nothing is defined.
-    assert_eq!(result(&engine, "zum(2;3)"), None);
+    // The examples are commented out, so nothing is defined: `zum` is free
+    // text and, as in Numi, only the first value of `(2;3)` is kept.
+    assert_ne!(result(&engine, "zum(2;3)").as_deref(), Some("5"));
 }
 
 #[test]

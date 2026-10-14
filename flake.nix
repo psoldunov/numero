@@ -35,6 +35,22 @@
       toolchainFor = pkgs: pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
     in
     {
+      # The macOS app is built with cargo on a Mac (`just bundle`), not here.
+      packages = forAllSystems (
+        pkgs:
+        let
+          toolchain = toolchainFor pkgs;
+          rustPlatform = pkgs.makeRustPlatform {
+            cargo = toolchain;
+            rustc = toolchain;
+          };
+        in
+        nixpkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux rec {
+          numero = pkgs.callPackage ./nix/package.nix { inherit rustPlatform; };
+          default = numero;
+        }
+      );
+
       devShells = forAllSystems (pkgs: {
         default = pkgs.callPackage ./nix/devshell.nix {
           rustToolchain = toolchainFor pkgs;

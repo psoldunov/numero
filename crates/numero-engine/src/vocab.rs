@@ -24,8 +24,29 @@ const EN_CURRENCY: &str = include_str!("../data/en/currency.txt");
 const EN_EXTRA: &str = include_str!("../data/en/extra.txt");
 
 /// Phrases a unit symbol never generates because they mean something else.
-const RESERVED: &[&str] = &[
-    "am", "pm", "as", "at", "in", "is", "on", "of", "to", "mod", "min",
+/// `pm` (picometre) and `at` (attotonne) are not among them: Numi reads
+/// `1 nm in pm` and `5 at` as units (§1.4 [oracle]).
+const RESERVED: &[&str] = &["am", "as", "in", "is", "on", "of", "to", "mod", "min"];
+
+/// Phrases in Numi's tables that its matcher never reaches: `25 °C` is
+/// `25 °` (the angle) followed by a stray `C`, and `K` is the thousand
+/// scale, not kelvin (§1.2 [oracle]).
+const UNMATCHED: &[&str] = &["°C", "°F", "K"];
+
+/// Month names (en_US calendar symbols): `5 oct`, `oct 5` (§8.1 [oracle]).
+const MONTHS: [(&str, &str); 12] = [
+    ("january", "jan"),
+    ("february", "feb"),
+    ("march", "mar"),
+    ("april", "apr"),
+    ("may", "may"),
+    ("june", "jun"),
+    ("july", "jul"),
+    ("august", "aug"),
+    ("september", "sept"),
+    ("october", "oct"),
+    ("november", "nov"),
+    ("december", "dec"),
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -113,6 +134,12 @@ pub enum Meaning {
     Now,
     Local,
     Zone(chrono_tz::Tz),
+    /// A month of the year, 1 to 12.
+    Month(u8),
+    /// `GMT+3`, `gmt -5`: Numi's `gmt` function. Its offset is lost: as a
+    /// conversion target it is GMT, after a time it is ignored, and on its
+    /// own the line has no result (§8.2 [oracle]).
+    GmtOffset,
 }
 
 /// Classes for de-duplicating phrases: one phrase may carry several
@@ -125,6 +152,8 @@ pub enum Kind {
     Currency,
     Scale,
     Zone,
+    /// Months share `dec` with the decimal format word.
+    Month,
     Other,
 }
 
@@ -135,6 +164,7 @@ impl Meaning {
             Meaning::Currency(_) => Kind::Currency,
             Meaning::Scale(_) => Kind::Scale,
             Meaning::Zone(_) => Kind::Zone,
+            Meaning::Month(_) => Kind::Month,
             _ => Kind::Other,
         }
     }
@@ -267,6 +297,9 @@ impl Vocab {
     }
 
     pub(crate) fn insert(&mut self, phrase: &str, meaning: Meaning) {
+        if matches!(meaning, Meaning::Unit(_)) && UNMATCHED.contains(&phrase) {
+            return;
+        }
         self.trie.insert(phrase, is_case_sensitive(phrase), meaning);
     }
 
@@ -352,6 +385,9 @@ impl Vocab {
                 .flatten()
                 .collect();
             self.insert_all(&variants, *meaning);
+        }
+        for (month, (long, short)) in (1u8..).zip(MONTHS) {
+            self.insert_all(&[long, short, &long[..3]], M::Month(month));
         }
     }
 
@@ -462,16 +498,6 @@ impl Vocab {
                 }
             }
         }
-        if let (Some(byte), Some(kilo)) = (
-            unit_index(&self.units, "byte"),
-            PREFIXES.iter().position(|p| p.id == "kilo"),
-        ) {
-            let unit = UnitRef {
-                prefix: u8::try_from(kilo).ok(),
-                ..UnitRef::plain(byte)
-            };
-            generated.push(("KB".into(), true, Meaning::Unit(unit)));
-        }
         for (phrase, sensitive, meaning) in generated {
             if !RESERVED.contains(&phrase.as_str()) && !self.trie.contains(&phrase) {
                 self.trie.insert(&phrase, sensitive, meaning);
@@ -497,9 +523,12 @@ impl Vocab {
                 for template in templates {
                     let text = template.replace("%@", &phrase);
                     let sensitive = sensitive && !template.chars().any(char::is_alphabetic);
+                    let unit = UnitRef {
+                        superscript: template.contains(['²', '³']),
+                        ..unit.with_power(power)
+                    };
                     if !self.trie.contains(&text) {
-                        self.trie
-                            .insert(&text, sensitive, Meaning::Unit(unit.with_power(power)));
+                        self.trie.insert(&text, sensitive, Meaning::Unit(unit));
                     }
                 }
             }
@@ -577,6 +606,12 @@ impl Vocab {
         });
         self.currency_index.insert(code.to_string(), index);
         self.trie.insert(code, true, Meaning::Currency(index));
+        // Codes also match in lower case (`5 usd`), unless that spelling
+        // already means something else (`cup`) (§1.2 [oracle]).
+        let lower = code.to_lowercase();
+        if !self.trie.contains(&lower) {
+            self.trie.insert(&lower, true, Meaning::Currency(index));
+        }
         (index, true)
     }
 
@@ -589,22 +624,21 @@ impl Vocab {
         }
     }
 
-    /// Display text for a unit: `km`, `m²`, `GiB`, `°C`.
+    /// Display text for a unit: `km`, `m²`, `GiB`, `°C`. A prefix goes in
+    /// front of the unit's symbol rather than its format, so the litre
+    /// shows `L` but the millilitre `ml` (§1.2 [oracle]).
     pub fn unit_format(&self, unit: UnitRef) -> String {
-        let base = self
-            .unit_formats
-            .get(usize::from(unit.def))
-            .cloned()
-            .unwrap_or_default();
+        let index = usize::from(unit.def);
         let prefixed = match unit.prefix {
             Some(p) => format!(
-                "{}{base}",
+                "{}{}",
                 self.prefix_symbols
                     .get(usize::from(p))
                     .cloned()
-                    .unwrap_or_default()
+                    .unwrap_or_default(),
+                self.unit_symbols.get(index).cloned().unwrap_or_default()
             ),
-            None => base,
+            None => self.unit_formats.get(index).cloned().unwrap_or_default(),
         };
         match unit.power {
             2 => self.area_format.replace("%@", &prefixed),

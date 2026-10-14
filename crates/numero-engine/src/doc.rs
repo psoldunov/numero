@@ -3,15 +3,22 @@
 //!
 //! Every line's result (or its absence) feeds the next: `prev` is the line
 //! directly above, `sum` walks up from there to the first line without a
-//! result, and the grand total adds every result that can be added.
+//! result, and the grand total adds every result up (§5 [oracle]). A line
+//! whose calculation fails (NaN), or a result the total cannot add,
+//! empties the grand total for the rest of the document; a line Numi gives
+//! an empty value (`log 100`, `5 m in foo`) starts it over; blank,
+//! comment and unparsable lines leave it alone.
+//!
+//! Variable names ignore case and may contain spaces (`Total cost = 5`,
+//! then `total cost * 2`).
 
 use std::collections::HashMap;
 
 use crate::eval::{Scope, eval, quantity, unit_ref};
 use crate::ext::ExtFunction;
-use crate::lexer::{NumberStyle, Sym, Tok, Token, lex};
+use crate::lexer::{NumberStyle, Sym, Tok, Token, lex, normalize_name};
 use crate::num::Num;
-use crate::parser::{BinOp, parse, resolve};
+use crate::parser::{BinOp, Expr, P, parse, resolve};
 use crate::units::{Dim, UnitEnv, UnitTable};
 use crate::value::{Unit, Value};
 use crate::vocab::{Meaning, Vocab};
@@ -41,14 +48,37 @@ pub struct Outcome {
     pub grand_total: Option<Value>,
 }
 
+/// What a line does to the blocks and the grand total.
+#[derive(Debug, Clone, Copy)]
+enum Effect {
+    Value(Value),
+    /// No value at all: blank, comment, header, unparsable text.
+    Skip,
+    /// Numi's empty value: the grand total starts over.
+    Reset,
+    /// NaN: the grand total stays empty.
+    Break,
+}
+
+/// The running grand total.
+#[derive(Debug, Clone, Copy)]
+enum Total {
+    Empty,
+    Sum(Value),
+    /// A line failed or could not be added: Numi's NaN.
+    Broken,
+}
+
 /// What carries from one line to the next.
 #[derive(Debug)]
 struct State {
     vars: HashMap<String, Value>,
+    /// The keys of `vars`, for the lexer.
+    names: Vec<String>,
     block: Vec<Value>,
     prev: Option<Value>,
     env: UnitEnv,
-    grand_total: Option<Value>,
+    grand_total: Total,
 }
 
 pub fn evaluate(document: &str, inputs: &Inputs<'_>) -> Outcome {
@@ -56,35 +86,55 @@ pub fn evaluate(document: &str, inputs: &Inputs<'_>) -> Outcome {
     let mut vars: HashMap<String, Value> = HashMap::new();
     vars.insert("r".into(), Value::plain(Num::exact(GAS_CONSTANT)));
     vars.insert("ppi".into(), Value::plain(ppi));
-    vars.extend(inputs.globals.iter().cloned());
+    vars.extend(
+        inputs
+            .globals
+            .iter()
+            .map(|(name, value)| (normalize_name(name), *value)),
+    );
+    let names = vars.keys().cloned().collect();
     let mut state = State {
         vars,
+        names,
         block: Vec::new(),
         prev: None,
         env: UnitEnv {
             ppi,
             em_px: setting(inputs.config.em_px),
         },
-        grand_total: None,
+        grand_total: Total::Empty,
     };
     let lines = document
         .split('\n')
         .map(|line| {
-            let result = evaluate_line(line.strip_suffix('\r').unwrap_or(line), inputs, &mut state);
-            match result.1 {
-                Some(value) => {
+            let (result, effect) =
+                evaluate_line(line.strip_suffix('\r').unwrap_or(line), inputs, &mut state);
+            state.prev = None;
+            match effect {
+                Effect::Value(value) => {
                     state.block.push(value);
                     add_to_total(&mut state, value, inputs);
+                    state.prev = Some(value);
                 }
-                None => state.block.clear(),
+                Effect::Skip => state.block.clear(),
+                Effect::Reset => {
+                    state.block.clear();
+                    state.grand_total = Total::Empty;
+                }
+                Effect::Break => {
+                    state.block.clear();
+                    state.grand_total = Total::Broken;
+                }
             }
-            state.prev = result.1;
-            result.0
+            result
         })
         .collect();
     Outcome {
         lines,
-        grand_total: state.grand_total,
+        grand_total: match state.grand_total {
+            Total::Sum(value) => Some(value),
+            Total::Empty | Total::Broken => None,
+        },
     }
 }
 
@@ -105,19 +155,18 @@ fn scope<'a>(inputs: &'a Inputs<'_>, state: &'a State) -> Scope<'a> {
     }
 }
 
-/// The grand total adds every result it can; additions that fail are
-/// skipped (§5).
+/// The grand total adds every result with `+`; one that cannot be added
+/// breaks it for good (§5 [oracle]).
 fn add_to_total(state: &mut State, value: Value, inputs: &Inputs<'_>) {
-    let next = match state.grand_total {
-        None => Some(value),
-        Some(total) => crate::eval::binary(BinOp::Add, total, value, &scope(inputs, state)).ok(),
+    state.grand_total = match state.grand_total {
+        Total::Empty => Total::Sum(value),
+        Total::Sum(total) => crate::eval::binary(BinOp::Add, total, value, &scope(inputs, state))
+            .map_or(Total::Broken, Total::Sum),
+        Total::Broken => Total::Broken,
     };
-    if next.is_some() {
-        state.grand_total = next;
-    }
 }
 
-fn result(kind: LineKind, spans: Vec<Span>) -> (LineResult, Option<Value>) {
+fn result(kind: LineKind, spans: Vec<Span>, effect: Effect) -> (LineResult, Effect) {
     (
         LineResult {
             kind,
@@ -125,18 +174,14 @@ fn result(kind: LineKind, spans: Vec<Span>) -> (LineResult, Option<Value>) {
             number: None,
             spans,
         },
-        None,
+        effect,
     )
 }
 
-fn evaluate_line(
-    line: &str,
-    inputs: &Inputs<'_>,
-    state: &mut State,
-) -> (LineResult, Option<Value>) {
+fn evaluate_line(line: &str, inputs: &Inputs<'_>, state: &mut State) -> (LineResult, Effect) {
     let trimmed = line.trim();
     if trimmed.is_empty() {
-        return result(LineKind::Empty, Vec::new());
+        return result(LineKind::Empty, Vec::new(), Effect::Skip);
     }
     let lead = line.len() - line.trim_start().len();
     if trimmed.starts_with('#') {
@@ -144,7 +189,7 @@ fn evaluate_line(
             range: lead..line.trim_end().len(),
             class: TokenClass::Header,
         };
-        return result(LineKind::Header, vec![span]);
+        return result(LineKind::Header, vec![span], Effect::Skip);
     }
     let mut spans = Vec::new();
     let mut start = 0;
@@ -155,22 +200,21 @@ fn evaluate_line(
         });
         start = end;
     }
-    let vars = &state.vars;
-    let is_var = |name: &str| vars.contains_key(name);
     let style = NumberStyle {
         decimal: inputs.config.decimal_separator,
     };
-    let tokens = lex(line, start, inputs.vocab, style, &is_var);
+    let tokens = lex(line, start, inputs.vocab, style, &state.names);
     let assignment = split_assignment(line, &tokens);
-    let body = &tokens[assignment.as_ref().map_or(0, |_| 2)..];
+    let body = &tokens[assignment.as_ref().map_or(0, |a| a.operator + 1)..];
     let (resolved, classes) = resolve(body);
-    if let Some(name_token) = assignment.as_ref().and(tokens.first()) {
+    if let Some(a) = &assignment {
+        let name_span = tokens[0].span.start..tokens[a.operator - 1].span.end;
         spans.push(Span {
-            range: name_token.span.clone(),
+            range: name_span,
             class: TokenClass::Variable,
         });
         spans.push(Span {
-            range: tokens[1].span.clone(),
+            range: tokens[a.operator].span.clone(),
             class: TokenClass::Operator,
         });
     }
@@ -179,15 +223,19 @@ fn evaluate_line(
         class,
     }));
     if resolved.is_empty() {
-        return result(LineKind::Comment, spans);
+        return result(LineKind::Comment, spans, Effect::Skip);
     }
+    let resets = resolved
+        .iter()
+        .any(|p| matches!(p, P::Fail { resets: true }));
     let Some(expr) = parse(resolved) else {
-        return result(LineKind::Comment, spans);
+        let effect = if resets { Effect::Reset } else { Effect::Skip };
+        return result(LineKind::Comment, spans, effect);
     };
     let outcome = eval(&expr, &scope(inputs, state));
     match outcome {
         Ok(value) => {
-            if let Some(name) = assignment {
+            if let Some(name) = assignment.and_then(|a| a.name) {
                 assign(state, name, value, inputs.vocab);
             }
             let line_result = LineResult {
@@ -196,9 +244,13 @@ fn evaluate_line(
                 number: value.number(),
                 spans,
             };
-            (line_result, Some(value))
+            (line_result, Effect::Value(value))
         }
-        Err(_) => result(LineKind::Error, spans),
+        // `prev` with nothing above is empty rather than a failure, so
+        // it leaves the grand total alone (§5 [oracle]).
+        Err(_) if expr == Expr::Prev => result(LineKind::Comment, spans, Effect::Skip),
+        Err(e) if e.empty => result(LineKind::Error, spans, Effect::Reset),
+        Err(_) => result(LineKind::Error, spans, Effect::Break),
     }
 }
 
@@ -225,25 +277,34 @@ fn label_end(line: &str) -> Option<usize> {
         .then_some(colon + 1)
 }
 
-fn is_identifier(text: &str) -> bool {
-    let mut chars = text.chars();
-    chars.next().is_some_and(|c| c.is_alphabetic() || c == '_')
-        && chars.all(|c| c.is_alphanumeric() || c == '_')
+/// `name = …`: where the assignment operator is, and the variable name
+/// if it is one Numi stores (letters, digits, `_` and spaces, with at least
+/// one letter or `_`). The line shows the right-hand side either way:
+/// `5 = 3` shows 3 (§5 [oracle]).
+struct Assignment {
+    operator: usize,
+    name: Option<String>,
 }
 
-/// `name = …`, `name equal …`, `name is …`: the variable name, if the line
-/// assigns one.
-fn split_assignment(line: &str, tokens: &[Token]) -> Option<String> {
-    let [first, second, _, ..] = tokens else {
-        return None;
-    };
-    let name = &line[first.span.clone()];
-    let assigns = match &second.tok {
+/// `name = …`, `name equal …`, `name is …`.
+fn split_assignment(line: &str, tokens: &[Token]) -> Option<Assignment> {
+    let operator = tokens.iter().position(|t| match &t.tok {
         Tok::Sym(Sym::Assign) => true,
         Tok::Phrase(meanings) => meanings.contains(&Meaning::Assign),
         _ => false,
-    };
-    (assigns && is_identifier(name)).then(|| name.to_string())
+    })?;
+    if operator == 0 || operator + 1 >= tokens.len() {
+        return None;
+    }
+    let text = &line[tokens[0].span.start..tokens[operator - 1].span.end];
+    let valid = text
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_' || c.is_whitespace())
+        && text.chars().any(|c| c.is_alphabetic() || c == '_');
+    Some(Assignment {
+        operator,
+        name: valid.then(|| normalize_name(text)),
+    })
 }
 
 /// Store a variable. `ppi` and `em` also retune CSS units for the lines
@@ -259,12 +320,17 @@ fn assign(state: &mut State, name: String, value: Value, vocab: &Vocab) {
             if let Ok(q) = quantity(value) {
                 state.env.ppi = q.n;
             }
-            state.vars.insert(name, value);
+            store(state, name, value);
         }
-        _ => {
-            state.vars.insert(name, value);
-        }
+        _ => store(state, name, value),
     }
+}
+
+fn store(state: &mut State, name: String, value: Value) {
+    if !state.vars.contains_key(&name) {
+        state.names.push(name.clone());
+    }
+    state.vars.insert(name, value);
 }
 
 fn pixels(value: Value, env: UnitEnv, vocab: &Vocab) -> Option<Num> {

@@ -3,7 +3,7 @@
 //! position in a line. Matching folds case, and one space in a phrase
 //! matches any run of whitespace in the input. Short symbols such as `M`
 //! (million) versus `m` (metre) are stored case-sensitive and checked
-//! against the original text.
+//! against the original text first, then against its lower-cased form.
 
 use crate::vocab::Meaning;
 
@@ -106,9 +106,9 @@ impl Trie {
         &self.entries
     }
 
-    /// Whether a phrase (any meaning) is known.
+    /// Whether a phrase (any meaning) is known, in exactly this case.
     pub fn contains(&self, phrase: &str) -> bool {
-        self.longest_match(phrase, 0)
+        self.find(phrase, 0, false)
             .is_some_and(|m| m.end == phrase.len())
     }
 
@@ -137,6 +137,10 @@ impl Trie {
     /// The longest phrase starting at byte `start` of `line` that ends on a
     /// word boundary. The caller checks the boundary before `start`.
     pub fn longest_match(&self, line: &str, start: usize) -> Option<Match> {
+        self.find(line, start, true)
+    }
+
+    fn find(&self, line: &str, start: usize, lower_case_retry: bool) -> Option<Match> {
         let mut node = 0usize;
         let mut best = None;
         let mut chars = line[start..].char_indices().peekable();
@@ -157,13 +161,25 @@ impl Trie {
                 continue;
             }
             let text = &line[start..end];
-            let meanings: Vec<Meaning> = self.nodes[node]
-                .entries
-                .iter()
-                .map(|&e| &self.entries[e as usize])
+            let entries = || {
+                self.nodes[node]
+                    .entries
+                    .iter()
+                    .map(|&e| &self.entries[e as usize])
+            };
+            let mut meanings: Vec<Meaning> = entries()
                 .filter(|e| !e.case_sensitive || same_words(&e.phrase, text))
                 .map(|e| e.meaning)
                 .collect();
+            if meanings.is_empty() && lower_case_retry {
+                // Numi retries an unknown phrase in lower case: `KB` is
+                // `kb` (kilobit), `G` is `g`, `NM` is `nm` (§1.1 [oracle]).
+                let lower = text.to_lowercase();
+                meanings = entries()
+                    .filter(|e| same_words(&e.phrase, &lower))
+                    .map(|e| e.meaning)
+                    .collect();
+            }
             if !meanings.is_empty() {
                 best = Some(Match { end, meanings });
             }

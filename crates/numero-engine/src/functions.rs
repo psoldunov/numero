@@ -1,33 +1,28 @@
 //! Built-in functions (§9). `sin cos tan` read a unitless argument as
-//! degrees and honour `rad`/`°`; `arcsin arccos arctan` answer in degrees.
-//! `log x` is base 10 and `log b (x)` takes the base first; `root n (x)`
-//! keeps the sign for odd roots of negatives; `fact x` is Γ(x + 1).
-//! Extension functions run through [`crate::ext`].
+//! degrees and honour `rad`/`°`; `arcsin arccos arctan` answer in degrees,
+//! with the `°` unit. `log b (x)` takes the base first and needs both;
+//! `root n (x)` keeps the sign for odd roots of negatives; `fact x` is
+//! Γ(x + 1). `sqrt`, `cbrt`, `abs` and the roundings keep the argument's
+//! unit (§9 [oracle]). Every `f64` result comes back through Foundation's
+//! double-to-decimal conversion ([`Num::from_double`]). Extension
+//! functions run through [`crate::ext`].
 
-use rust_decimal::{Decimal, RoundingStrategy};
+use rust_decimal::Decimal;
 
 use crate::dates;
 use crate::eval::{Scope, quantity, unit_ref};
 use crate::ext;
 use crate::num::Num;
 use crate::units::{Dim, UnitTable};
-use crate::value::{Eval, Quantity, Unit, Value, fail};
+use crate::value::{Eval, Quantity, Unit, Value, fail, fail_empty};
 use crate::vocab::Func;
 
-/// Floats that land on a modest whole number become exact decimals again,
-/// so `sqrt(16) + 0.1` stays decimal.
-const EXACT_INTEGER_LIMIT: f64 = 1e15;
 /// Largest `x` for `fact x`; beyond it Γ(x + 1) overflows a double.
 const MAX_FACTORIAL: f64 = 170.0;
 
+/// An `f64` result as Numi stores it.
 fn clean(f: f64) -> Eval<Num> {
-    if !f.is_finite() {
-        return fail("result is not a number");
-    }
-    if f.fract() == 0.0 && f.abs() < EXACT_INTEGER_LIMIT {
-        return Ok(Num::int(f as i64));
-    }
-    Ok(Num::Float(f))
+    Num::from_double(f).map_or_else(|| fail("result is not a number"), Ok)
 }
 
 fn plain_arg(value: Value) -> Eval<f64> {
@@ -38,7 +33,7 @@ fn arity(args: &[Value], min: usize, max: usize) -> Eval<()> {
     if (min..=max).contains(&args.len()) {
         Ok(())
     } else {
-        fail("wrong number of arguments")
+        fail_empty("wrong number of arguments")
     }
 }
 
@@ -47,13 +42,14 @@ pub fn call(func: Func, args: &[Value], scope: &Scope<'_>) -> Eval<Value> {
         return ext::call(index, args, scope);
     }
     match func {
-        Func::Root | Func::Log | Func::Round => arity(args, 1, 2)?,
+        Func::Log => arity(args, 2, 2)?,
+        Func::Root | Func::Round => arity(args, 1, 2)?,
         _ => arity(args, 1, 1)?,
     }
     let first = args[0];
     match func {
-        Func::Sqrt => root_of(first, 2, scope),
-        Func::Cbrt => root_of(first, 3, scope),
+        Func::Sqrt => root_of(first, 2, f64::sqrt),
+        Func::Cbrt => root_of(first, 3, f64::cbrt),
         Func::Root => nth_root(args),
         Func::Abs => keep_unit(first, |n| n.abs()),
         Func::Log => log(args),
@@ -65,9 +61,9 @@ pub fn call(func: Func, args: &[Value], scope: &Scope<'_>) -> Eval<Value> {
         Func::Sin => trig(first, f64::sin, scope),
         Func::Cos => trig(first, f64::cos, scope),
         Func::Tan => trig(first, f64::tan, scope),
-        Func::Asin => inverse_trig(first, f64::asin),
-        Func::Acos => inverse_trig(first, f64::acos),
-        Func::Atan => inverse_trig(first, f64::atan),
+        Func::Asin => inverse_trig(first, f64::asin, scope),
+        Func::Acos => inverse_trig(first, f64::acos, scope),
+        Func::Atan => inverse_trig(first, f64::atan, scope),
         Func::Sinh => plain(first, f64::sinh),
         Func::Cosh => plain(first, f64::cosh),
         Func::Tanh => plain(first, f64::tanh),
@@ -85,18 +81,17 @@ fn keep_unit(value: Value, f: impl Fn(Num) -> Num) -> Eval<Value> {
     Ok(Value::Q(q.map(f(q.n))))
 }
 
-/// `sqrt`/`cbrt` of a plain number, or of a square/cubic length (an
-/// extension of Numi, which drops the unit).
-fn root_of(value: Value, degree: u8, scope: &Scope<'_>) -> Eval<Value> {
+/// `sqrt(16 m)` = `4 m`, `sqrt(16 m2)` = `4 m²`: computed in `f64` with
+/// the unit unchanged, except that a power written `²`/`³` matching the
+/// root goes away (`sqrt(16 km²)` = `4 km`).
+fn root_of(value: Value, degree: u8, f: fn(f64) -> f64) -> Eval<Value> {
     let q = quantity(value)?;
-    let x = q.n.to_f64();
-    let r = if degree == 2 { x.sqrt() } else { x.cbrt() };
-    match q.unit {
-        Unit::Phys(u) if scope.vocab.is_length_family(u) && u.power == degree => Ok(Value::Q(
-            Quantity::with(clean(r)?, Unit::Phys(u.with_power(1))),
-        )),
-        _ => Ok(Value::plain(clean(r)?)),
-    }
+    let n = clean(f(q.n.to_f64()))?;
+    let unit = match q.unit {
+        Unit::Phys(u) if u.superscript && u.power == degree => Unit::Phys(u.with_power(1)),
+        other => other,
+    };
+    Ok(Value::Q(Quantity { n, unit, ..q }))
 }
 
 fn nth_root(args: &[Value]) -> Eval<Value> {
@@ -114,15 +109,15 @@ fn nth_root(args: &[Value]) -> Eval<Value> {
 }
 
 fn log(args: &[Value]) -> Eval<Value> {
-    let result = match args {
-        [x] => plain_arg(*x)?.log10(),
-        [base, x] => plain_arg(*x)?.log2() / plain_arg(*base)?.log2(),
-        _ => return fail("log needs one or two arguments"),
+    let [base, x] = args else {
+        return fail_empty("log needs a base and a number");
     };
+    let result = plain_arg(*x)?.log2() / plain_arg(*base)?.log2();
     Ok(Value::plain(clean(result)?))
 }
 
-/// Γ(x + 1): exact for whole numbers, Lanczos otherwise.
+/// Γ(x + 1) in `f64`, as Numi's `tgamma`: whole numbers give the double
+/// nearest the exact factorial, others use Lanczos.
 fn factorial(value: Value) -> Eval<Value> {
     let x = plain_arg(value)?;
     if x > MAX_FACTORIAL {
@@ -130,9 +125,12 @@ fn factorial(value: Value) -> Eval<Value> {
     }
     if x.fract() == 0.0 && x >= 0.0 {
         let n = x as i64;
-        return Ok(Value::plain(
-            (2..=n).fold(Num::ONE, |acc, k| acc.mul(Num::int(k))),
-        ));
+        let exact = (2..=n).fold(Num::ONE, |acc, k| acc.mul(Num::int(k)));
+        let nearest = exact
+            .to_big_lossy()
+            .and_then(|b| b.digits().parse::<f64>().ok())
+            .unwrap_or(f64::NAN);
+        return Ok(Value::plain(clean(nearest)?));
     }
     Ok(Value::plain(clean(gamma(x + 1.0))?))
 }
@@ -170,12 +168,7 @@ fn round(args: &[Value]) -> Eval<Value> {
         Some(d) => u32::try_from(plain_arg(*d)? as i64).unwrap_or(0),
         None => 0,
     };
-    keep_unit(args[0], |n| match n {
-        Num::Dec(d) => {
-            Num::Dec(d.round_dp_with_strategy(digits, RoundingStrategy::MidpointAwayFromZero))
-        }
-        Num::Float(_) => n.round_dp(digits),
-    })
+    keep_unit(args[0], |n| n.round_dp(digits))
 }
 
 /// `sin`/`cos`/`tan`: unitless means degrees.
@@ -201,9 +194,19 @@ fn trig(value: Value, f: fn(f64) -> f64, scope: &Scope<'_>) -> Eval<Value> {
     Ok(Value::plain(clean(result)?))
 }
 
-/// `arcsin`/`arccos`/`arctan`, in degrees.
-fn inverse_trig(value: Value, f: fn(f64) -> f64) -> Eval<Value> {
-    let degrees = f(plain_arg(value)?).to_degrees();
-    let rounded = (degrees * 1e12).round() / 1e12;
-    Ok(Value::plain(clean(rounded)?))
+/// `arcsin`/`arccos`/`arctan`: computed in radians, answered in degrees
+/// with the `°` unit, so `arctan 1 in rad` converts back (§9 [oracle]).
+fn inverse_trig(value: Value, f: fn(f64) -> f64, scope: &Scope<'_>) -> Eval<Value> {
+    let radians = clean(f(plain_arg(value)?))?;
+    let (Some(radian), Some(degree)) = (
+        unit_ref(scope.vocab, "radian"),
+        unit_ref(scope.vocab, "degree"),
+    ) else {
+        return fail("no angle units");
+    };
+    let degrees = scope
+        .vocab
+        .convert(radians, radian, degree, scope.env)
+        .map_or_else(|| fail("cannot convert"), Ok)?;
+    Ok(Value::Q(Quantity::with(degrees, Unit::Phys(degree))))
 }

@@ -113,7 +113,7 @@ sqrt(144)
 round(7.65)
 abs(-12)
 sin(30)
-log(1000)
+log 10 (1000)
 fact(6)",
     },
     Sample {

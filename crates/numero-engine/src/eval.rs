@@ -1,13 +1,14 @@
 //! Evaluating an expression tree against the document's state (§2.4, §3).
 //!
-//! Units: `+ −` and `mod` convert the right operand into the left one's
-//! unit (`5 m + 3 ft` = `5.91 m`); a bare number takes the other side's
-//! unit. `×` keeps whichever unit there is, `÷` drops matching units into
-//! a ratio and otherwise keeps the left unit. Beyond Numi, lengths
-//! multiply into areas and volumes (`3 m × 4 m` = `12 m²`). A percentage
-//! on the right of `+ − ×` is relative to the left (`100 + 20%` = 120).
-//! Failures (incompatible units, missing rates, division by zero) leave
-//! the line without a result, as Numi's NaN does.
+//! Units follow Numi 3.35 as the oracle shows it (§2.4 [oracle]): `+ −`
+//! convert the left operand into the right one's unit and keep that unit
+//! (`5 m + 3 ft` = `19.4 ft`); a bare number takes the other side's unit.
+//! `×` keeps the right operand's unit when it has one, without converting
+//! or compounding (`2 m × 3 m` = `6 m`); `÷` by a value with a unit drops
+//! both units without converting (`5 m / 2 cm` = 2.5); `mod` and `^` keep
+//! the left unit. A percentage on the right of `+ − ×` is relative to the
+//! left (`100 + 20%` = 120). Failures (incompatible units, missing rates,
+//! division by zero) leave the line without a result, as Numi's NaN does.
 
 use std::collections::HashMap;
 
@@ -18,11 +19,9 @@ use crate::num::Num;
 use crate::parser::{BinOp, Expr, Target};
 use crate::units::{UnitEnv, UnitRef, UnitTable};
 use crate::value::{Eval, Quantity, Unit, Value, fail};
-use crate::vocab::{PctOp, Vocab};
+use crate::vocab::{NumFmt, PctOp, Vocab};
 use crate::{EvalContext, Rates};
 
-/// π as Numi stores it, from the double.
-pub const PI: &str = "3.141592653589793";
 /// e to the 28 digits a decimal holds.
 pub const E: &str = "2.718281828459045235360287471";
 
@@ -53,7 +52,10 @@ pub fn eval(expr: &Expr, scope: &Scope<'_>) -> Eval<Value> {
             .get(name)
             .copied()
             .map_or_else(|| fail(format!("unknown {name}")), Ok),
-        Expr::Pi => Ok(Value::plain(Num::exact(PI))),
+        // π as Numi stores it: `NSDecimalNumber(double: M_PI)` (§1.5).
+        Expr::Pi => Ok(Value::plain(
+            Num::from_double(std::f64::consts::PI).unwrap_or(Num::ZERO),
+        )),
         Expr::E => Ok(Value::plain(Num::exact(E))),
         Expr::Prev => scope
             .prev
@@ -65,7 +67,10 @@ pub fn eval(expr: &Expr, scope: &Scope<'_>) -> Eval<Value> {
         Expr::Now(zone) => Ok(dates::now(*zone, scope.ctx)),
         Expr::Clock { .. } | Expr::Meridiem(..) => dates::clock(expr, None, scope.ctx),
         Expr::InZone(inner, tz) => dates::in_zone(inner, *tz, scope),
+        Expr::Day(day, month) => dates::day_of_month(eval(day, scope)?, *month, scope.ctx),
         Expr::Neg(inner) => negate(eval(inner, scope)?),
+        // An empty `prev` adds as nothing: `prev + 1` is 1 (§5 [oracle]).
+        Expr::Bin(BinOp::Add, a, b) if **a == Expr::Prev && scope.prev.is_none() => eval(b, scope),
         Expr::Bin(op, a, b) => binary(*op, eval(a, scope)?, eval(b, scope)?, scope),
         Expr::Pct(op, a, b) => percent_op(
             *op,
@@ -87,7 +92,16 @@ pub fn eval(expr: &Expr, scope: &Scope<'_>) -> Eval<Value> {
                 .collect::<Eval<Vec<_>>>()?;
             functions::call(*func, &values, scope)
         }
-        Expr::Convert(inner, target) => convert(eval(inner, scope)?, *target, scope),
+        Expr::Convert(inner, target) => {
+            let value = eval(inner, scope)?;
+            // `in <zone>` converts only `now`; after any other time, a
+            // date or a number it is ignored (§8.3 [oracle]).
+            let converts_zone = matches!(inner.as_ref(), Expr::Now(_));
+            match (value, target) {
+                (_, Target::Zone(_) | Target::Local) if !converts_zone => Ok(value),
+                _ => convert(value, *target, scope),
+            }
+        }
     }
 }
 
@@ -128,18 +142,19 @@ fn with_currency(value: Value, code: u16, scope: &Scope<'_>) -> Eval<Value> {
 }
 
 /// `sum`: the block folded with `+` from its top line down, so the result
-/// takes the top line's unit (§5).
+/// takes the bottom line's unit; with nothing above it has no result (§5
+/// [oracle]).
 fn total(scope: &Scope<'_>) -> Eval<Value> {
     let mut values = scope.block.iter().copied();
     let Some(first) = values.next() else {
-        return Ok(Value::plain(Num::ZERO));
+        return fail("nothing to add up");
     };
     values.try_fold(first, |acc, v| binary(BinOp::Add, acc, v, scope))
 }
 
 fn average(scope: &Scope<'_>) -> Eval<Value> {
     if scope.block.is_empty() {
-        return Ok(Value::plain(Num::ZERO));
+        return fail("nothing to average");
     }
     let count = Num::int(i64::try_from(scope.block.len()).unwrap_or(i64::MAX));
     let sum = quantity(total(scope)?)?;
@@ -157,23 +172,26 @@ pub fn binary(op: BinOp, a: Value, b: Value, scope: &Scope<'_>) -> Eval<Value> {
             dates::shift(d, q, op == BinOp::Sub, scope)
         }
         (Value::Q(q), Value::Date(d)) if op == BinOp::Add => dates::shift(d, q, false, scope),
-        (Value::Date(a), Value::Date(b)) if op == BinOp::Sub => {
-            Ok(dates::difference(a, b, scope.vocab))
-        }
+        (Value::Date(a), Value::Date(b)) if op == BinOp::Sub => Ok(dates::difference(a, b, scope)),
         _ => fail("cannot combine a date that way"),
     }
 }
 
 fn arith(op: BinOp, a: Quantity, b: Quantity, scope: &Scope<'_>) -> Eval<Quantity> {
-    // The result keeps the left operand's attributes, numeral system included.
-    let fmt = a.fmt;
+    // The right operand's numeral system wins when it has one: `1 + 0xff`
+    // and `0xff + 1` are both hex, `0xff + 1e3` is scientific.
+    let fmt = if b.fmt == NumFmt::Decimal {
+        a.fmt
+    } else {
+        b.fmt
+    };
     let result = match op {
         BinOp::Add => add(a, b, false, scope),
         BinOp::Sub => add(a, b, true, scope),
-        BinOp::Mul => multiply(a, b, scope),
-        BinOp::Div => divide(a, b, scope),
-        BinOp::Mod => modulo(a, b, scope),
-        BinOp::Pow => power(a, b, scope),
+        BinOp::Mul => Ok(multiply(a, b)),
+        BinOp::Div => divide(a, b),
+        BinOp::Mod => modulo(a, b),
+        BinOp::Pow => power(a, b),
         BinOp::And | BinOp::Or | BinOp::Xor | BinOp::Shl | BinOp::Shr => bitwise(op, a, b),
     }?;
     Ok(Quantity { fmt, ..result })
@@ -190,8 +208,8 @@ fn add(a: Quantity, b: Quantity, subtract: bool, scope: &Scope<'_>) -> Eval<Quan
         (Unit::None, _) => Ok(b.map(combine(a.n, b.n))),
         (_, Unit::None) => Ok(a.map(combine(a.n, b.n))),
         _ => {
-            let b_n = convert_quantity(b, a.unit, scope)?;
-            Ok(a.map(combine(a.n, b_n)))
+            let a_n = convert_quantity(a, b.unit, scope)?;
+            Ok(b.map(combine(a_n, b.n)))
         }
     }
 }
@@ -200,79 +218,43 @@ fn fraction(percent: Num) -> Num {
     percent.div(Num::HUNDRED).unwrap_or(Num::ZERO)
 }
 
-fn multiply(a: Quantity, b: Quantity, scope: &Scope<'_>) -> Eval<Quantity> {
-    let n = a.n.mul(b.n);
-    let units = scope.vocab;
+/// PercentageMultiplication for `x × p%` (`x × p/100`, in x's unit);
+/// otherwise the plain product in the right operand's unit, or the left
+/// one's when the right has none.
+fn multiply(a: Quantity, b: Quantity) -> Quantity {
     match (a.unit, b.unit) {
-        (Unit::Percent, Unit::Percent) => Ok(a.map(fraction(n))),
-        // PercentageMultiplication: `x × p/100`, in x's unit.
-        (Unit::Percent, _) => Ok(b.map(fraction(n))),
-        (_, Unit::Percent) => Ok(a.map(fraction(n))),
-        (Unit::None, _) => Ok(b.map(n)),
-        (Unit::Phys(x), Unit::Phys(y))
-            if units.is_length_family(x) && units.is_length_family(y) && x.power + y.power <= 3 =>
-        {
-            let b_n = units
-                .convert(b.n, y, x.with_power(y.power), scope.env)
-                .unwrap_or(b.n);
-            Ok(Quantity::with(
-                a.n.mul(b_n),
-                Unit::Phys(x.with_power(x.power + y.power)),
-            ))
-        }
-        _ => Ok(a.map(n)),
+        (_, Unit::Percent) => a.map(a.n.mul(fraction(b.n))),
+        (_, Unit::None) => a.map(a.n.mul(b.n)),
+        _ => b.map(a.n.mul(b.n)),
     }
 }
 
-fn divide(a: Quantity, b: Quantity, scope: &Scope<'_>) -> Eval<Quantity> {
-    let quotient = |x: Num, y: Num| x.div(y).map_or_else(|| fail("division by zero"), Ok);
-    let units = scope.vocab;
-    match (a.unit, b.unit) {
-        (_, Unit::None) => Ok(a.map(quotient(a.n, b.n)?)),
-        (Unit::Percent, Unit::Percent) => Ok(Quantity::plain(quotient(a.n, b.n)?)),
-        // No PercentageDivision: the percentage divides as a plain number.
-        (_, Unit::Percent) => Ok(a.map(quotient(a.n, b.n)?)),
-        (Unit::Phys(x), Unit::Phys(y))
-            if units.dim(x) != units.dim(y)
-                && units.is_length_family(x)
-                && units.is_length_family(y)
-                && x.power > y.power =>
-        {
-            let b_n = units
-                .convert(b.n, y, x.with_power(y.power), scope.env)
-                .unwrap_or(b.n);
-            Ok(Quantity::with(
-                quotient(a.n, b_n)?,
-                Unit::Phys(x.with_power(x.power - y.power)),
-            ))
-        }
-        _ => match convert_quantity(b, a.unit, scope) {
-            Ok(b_n) => Ok(Quantity::plain(quotient(a.n, b_n)?)),
-            Err(_) => Ok(a.map(quotient(a.n, b.n)?)),
-        },
-    }
-}
-
-fn modulo(a: Quantity, b: Quantity, scope: &Scope<'_>) -> Eval<Quantity> {
-    let b_n = match b.unit {
-        Unit::None | Unit::Percent => b.n,
-        _ => convert_quantity(b, a.unit, scope)?,
+/// By a plain number or a percentage, the left unit stays; by anything
+/// with a unit, both units drop and nothing is converted.
+fn divide(a: Quantity, b: Quantity) -> Eval<Quantity> {
+    let Some(n) = a.n.div(b.n) else {
+        return fail("division by zero");
     };
-    a.n.rem(b_n)
+    match (a.unit, b.unit) {
+        (Unit::Percent, Unit::Percent) => Ok(Quantity::plain(n)),
+        (_, Unit::None | Unit::Percent) => Ok(a.map(n)),
+        _ => Ok(Quantity::plain(n)),
+    }
+}
+
+/// The remainder of the bare numbers, in the left operand's unit.
+fn modulo(a: Quantity, b: Quantity) -> Eval<Quantity> {
+    a.n.rem(b.n)
         .map_or_else(|| fail("division by zero"), |n| Ok(a.map(n)))
 }
 
-fn power(a: Quantity, b: Quantity, scope: &Scope<'_>) -> Eval<Quantity> {
+/// `(2 m)^2` is `4 m`: the unit is kept, not squared.
+fn power(a: Quantity, b: Quantity) -> Eval<Quantity> {
     let n = a.n.pow(b.n);
     if !n.is_finite() {
         return fail("result is not a number");
     }
-    match (a.unit, b.n.to_i64()) {
-        (Unit::Phys(u), Some(p @ 2..=3)) if scope.vocab.is_length_family(u) && u.power == 1 => Ok(
-            Quantity::with(n, Unit::Phys(u.with_power(u8::try_from(p).unwrap_or(1)))),
-        ),
-        _ => Ok(a.map(n)),
-    }
+    Ok(a.map(n))
 }
 
 /// `& | xor << >>` on the integer parts, as Numi's `integerValue` (§2.4).
@@ -375,11 +357,12 @@ fn convert(value: Value, target: Target, scope: &Scope<'_>) -> Eval<Value> {
         (Value::Date(m), Target::Zone(tz)) => Ok(dates::to_zone(m, tz)),
         (Value::Date(m), Target::Local) => Ok(dates::to_zone(m, scope.ctx.local_tz)),
         (Value::Date(_), _) => fail("dates convert only to time zones"),
+        (Value::Q(_), Target::Month) => fail("a number does not convert to a month"),
         (Value::Q(q), Target::Format(fmt)) => Ok(Value::Q(Quantity { fmt, ..q })),
         (Value::Q(q), Target::Unit(unit)) => convert_to(q, Unit::Phys(unit), scope),
         (Value::Q(q), Target::Currency(code)) => convert_to(q, Unit::Currency(code), scope),
         (Value::Q(q), Target::Percent) => convert_to(q, Unit::Percent, scope),
-        (Value::Q(_), Target::Zone(_) | Target::Local) => fail("only times convert to a time zone"),
+        (Value::Q(q), Target::Zone(_) | Target::Local) => Ok(Value::Q(q)),
     }
 }
 

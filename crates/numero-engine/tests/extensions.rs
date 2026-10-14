@@ -15,6 +15,7 @@ fn horse() -> UnitSpec {
         base_unit_id: "m".into(),
         format: "hrs".into(),
         ratio: 2.4,
+        international_symbol: None,
     }
 }
 
@@ -61,7 +62,7 @@ fn custom_units() {
         &[
             ("2 horses in m", "4.8 m"),
             ("10 m in horses", "4.17 hrs"),
-            ("1 horse + 1 m", "1.42 hrs"),
+            ("1 horse + 1 m", "3.4 m"),
             ("3 hrs", "3 hrs"),
             ("1 horse in km", "0 km"),
         ],
