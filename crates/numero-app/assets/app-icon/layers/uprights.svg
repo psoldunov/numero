@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!--
+    Icon Composer foreground layer, below the crossbars: the two uprights,
+    flat and opaque. Icon Composer's icon shape fills its whole canvas, so
+    the artwork is scaled from numero.svg's 824 tile to 1024 (x 1.2427).
+    Give the layer its glass, translucency and shadow in Icon Composer.
+  -->
+  <g fill="#ef3d3a" transform="translate(512 512) scale(1.2427) translate(-512 -512)">
+    <path d="M417.3 244.0L492.7 244.0A16 16 0 0 1 508.4 263.1L410.4 767.1A16 16 0 0 1 394.7 780.0L319.3 780.0A16 16 0 0 1 303.6 760.9L401.6 256.9A16 16 0 0 1 417.3 244.0Z"/>
+    <path d="M629.3 244.0L704.7 244.0A16 16 0 0 1 720.4 263.1L622.4 767.1A16 16 0 0 1 606.7 780.0L531.3 780.0A16 16 0 0 1 515.6 760.9L613.6 256.9A16 16 0 0 1 629.3 244.0Z"/>
+  </g>
+</svg>

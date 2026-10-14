@@ -41,6 +41,10 @@ app:
 cli *args:
     cargo run -q -p numero-cli -- {{ args }}
 
+# Render the app icon's SVG into its PNGs and icns (needs Chrome and ImageMagick).
+icon:
+    crates/numero-app/assets/app-icon/render.sh
+
 # Linux only: copy the tree to the Mac and run `just check` there over SSH.
 [linux]
 mac-check:

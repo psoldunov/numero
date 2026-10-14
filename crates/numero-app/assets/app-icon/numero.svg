@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!--
+    Numero's app icon: the number sign, #, in glass.
+
+    Apple's macOS grid: a 1024 canvas with the 824 tile centred in it (100
+    to 924). The tile's continuous-corner mask is a superellipse (n = 5),
+    and its shadow falls inside the margin.
+
+    The # is drawn as a glyph, not as four capsules. It leans 11 degrees,
+    the uprights are cut flat and the crossbars are cut along the lean,
+    and every corner has a 16 radius. Two red glass uprights sit under two
+    clear glass crossbars on a pale frost ground. The crossbars refract the
+    uprights: the scene behind each bar is drawn again inside it, magnified
+    1.1 times about the bar's centre and blurred.
+
+    This flattened icon draws its own Liquid Glass light. Each glass part
+    gets a tight contact shadow and a wide ambient one, light falling in
+    from above, a darker lower inside edge for thickness, and crisp
+    specular top and bottom edges. layers/ holds the same artwork flat for
+    Icon Composer, which adds the light itself.
+  -->
+  <defs>
+    <path id="tile" d="M924.00 512.00C924.00 553.12 923.93 608.25 923.80 635.37C923.67 662.49 923.47 663.41 923.21 674.71C922.94 686.02 922.61 694.61 922.21 703.21C921.81 711.80 921.35 719.16 920.81 726.28C920.28 733.41 919.68 739.80 919.02 745.95C918.35 752.10 917.61 757.76 916.81 763.20C916.01 768.65 915.13 773.73 914.19 778.62C913.25 783.51 912.24 788.12 911.16 792.56C910.07 797.01 908.92 801.22 907.70 805.29C906.47 809.35 905.18 813.23 903.80 816.97C902.43 820.71 900.99 824.28 899.47 827.73C897.95 831.18 896.35 834.49 894.68 837.68C893.01 840.88 891.26 843.94 889.42 846.89C887.59 849.85 885.68 852.69 883.68 855.43C881.68 858.17 879.61 860.80 877.44 863.34C875.27 865.88 873.02 868.32 870.67 870.67C868.32 873.02 865.88 875.27 863.34 877.44C860.80 879.61 858.17 881.68 855.43 883.68C852.69 885.68 849.85 887.59 846.89 889.42C843.94 891.26 840.88 893.01 837.68 894.68C834.49 896.35 831.18 897.95 827.73 899.47C824.28 900.99 820.71 902.43 816.97 903.80C813.23 905.18 809.35 906.47 805.29 907.70C801.22 908.92 797.01 910.07 792.56 911.16C788.12 912.24 783.51 913.25 778.62 914.19C773.73 915.13 768.65 916.01 763.20 916.81C757.76 917.61 752.10 918.35 745.95 919.02C739.80 919.68 733.41 920.28 726.28 920.81C719.16 921.35 711.80 921.81 703.21 922.21C694.61 922.61 686.02 922.94 674.71 923.21C663.41 923.47 662.49 923.67 635.37 923.80C608.25 923.93 553.12 924.00 512.00 924.00C470.88 924.00 415.75 923.93 388.63 923.80C361.51 923.67 360.59 923.47 349.29 923.21C337.98 922.94 329.39 922.61 320.79 922.21C312.20 921.81 304.84 921.35 297.72 920.81C290.59 920.28 284.20 919.68 278.05 919.02C271.90 918.35 266.24 917.61 260.80 916.81C255.35 916.01 250.27 915.13 245.38 914.19C240.49 913.25 235.88 912.24 231.44 911.16C226.99 910.07 222.78 908.92 218.71 907.70C214.65 906.47 210.77 905.18 207.03 903.80C203.29 902.43 199.72 900.99 196.27 899.47C192.82 897.95 189.51 896.35 186.32 894.68C183.12 893.01 180.06 891.26 177.11 889.42C174.15 887.59 171.31 885.68 168.57 883.68C165.83 881.68 163.20 879.61 160.66 877.44C158.12 875.27 155.68 873.02 153.33 870.67C150.98 868.32 148.73 865.88 146.56 863.34C144.39 860.80 142.32 858.17 140.32 855.43C138.32 852.69 136.41 849.85 134.58 846.89C132.74 843.94 130.99 840.88 129.32 837.68C127.65 834.49 126.05 831.18 124.53 827.73C123.01 824.28 121.57 820.71 120.20 816.97C118.82 813.23 117.53 809.35 116.30 805.29C115.08 801.22 113.93 797.01 112.84 792.56C111.76 788.12 110.75 783.51 109.81 778.62C108.87 773.73 107.99 768.65 107.19 763.20C106.39 757.76 105.65 752.10 104.98 745.95C104.32 739.80 103.72 733.41 103.19 726.28C102.65 719.16 102.19 711.80 101.79 703.21C101.39 694.61 101.06 686.02 100.79 674.71C100.53 663.41 100.33 662.49 100.20 635.37C100.07 608.25 100.00 553.12 100.00 512.00C100.00 470.88 100.07 415.75 100.20 388.63C100.33 361.51 100.53 360.59 100.79 349.29C101.06 337.98 101.39 329.39 101.79 320.79C102.19 312.20 102.65 304.84 103.19 297.72C103.72 290.59 104.32 284.20 104.98 278.05C105.65 271.90 106.39 266.24 107.19 260.80C107.99 255.35 108.87 250.27 109.81 245.38C110.75 240.49 111.76 235.88 112.84 231.44C113.93 226.99 115.08 222.78 116.30 218.71C117.53 214.65 118.82 210.77 120.20 207.03C121.57 203.29 123.01 199.72 124.53 196.27C126.05 192.82 127.65 189.51 129.32 186.32C130.99 183.12 132.74 180.06 134.58 177.11C136.41 174.15 138.32 171.31 140.32 168.57C142.32 165.83 144.39 163.20 146.56 160.66C148.73 158.12 150.98 155.68 153.33 153.33C155.68 150.98 158.12 148.73 160.66 146.56C163.20 144.39 165.83 142.32 168.57 140.32C171.31 138.32 174.15 136.41 177.11 134.58C180.06 132.74 183.12 130.99 186.32 129.32C189.51 127.65 192.82 126.05 196.27 124.53C199.72 123.01 203.29 121.57 207.03 120.20C210.77 118.82 214.65 117.53 218.71 116.30C222.78 115.08 226.99 113.93 231.44 112.84C235.88 111.76 240.49 110.75 245.38 109.81C250.27 108.87 255.35 107.99 260.80 107.19C266.24 106.39 271.90 105.65 278.05 104.98C284.20 104.32 290.59 103.72 297.72 103.19C304.84 102.65 312.20 102.19 320.79 101.79C329.39 101.39 337.98 101.06 349.29 100.79C360.59 100.53 361.51 100.33 388.63 100.20C415.75 100.07 470.88 100.00 512.00 100.00C553.12 100.00 608.25 100.07 635.37 100.20C662.49 100.33 663.41 100.53 674.71 100.79C686.02 101.06 694.61 101.39 703.21 101.79C711.80 102.19 719.16 102.65 726.28 103.19C733.41 103.72 739.80 104.32 745.95 104.98C752.10 105.65 757.76 106.39 763.20 107.19C768.65 107.99 773.73 108.87 778.62 109.81C783.51 110.75 788.12 111.76 792.56 112.84C797.01 113.93 801.22 115.08 805.29 116.30C809.35 117.53 813.23 118.82 816.97 120.20C820.71 121.57 824.28 123.01 827.73 124.53C831.18 126.05 834.49 127.65 837.68 129.32C840.88 130.99 843.94 132.74 846.89 134.58C849.85 136.41 852.69 138.32 855.43 140.32C858.17 142.32 860.80 144.39 863.34 146.56C865.88 148.73 868.32 150.98 870.67 153.33C873.02 155.68 875.27 158.12 877.44 160.66C879.61 163.20 881.68 165.83 883.68 168.57C885.68 171.31 887.59 174.15 889.42 177.11C891.26 180.06 893.01 183.12 894.68 186.32C896.35 189.51 897.95 192.82 899.47 196.27C900.99 199.72 902.43 203.29 903.80 207.03C905.18 210.77 906.47 214.65 907.70 218.71C908.92 222.78 910.07 226.99 911.16 231.44C912.24 235.88 913.25 240.49 914.19 245.38C915.13 250.27 916.01 255.35 916.81 260.80C917.61 266.24 918.35 271.90 919.02 278.05C919.68 284.20 920.28 290.59 920.81 297.72C921.35 304.84 921.81 312.20 922.21 320.79C922.61 329.39 922.94 337.98 923.21 349.29C923.47 360.59 923.67 361.51 923.80 388.63C923.93 415.75 924.00 470.88 924.00 512.00Z"/>
+    <clipPath id="tile-clip"><use href="#tile"/></clipPath>
+
+    <g id="uprights">
+      <path d="M417.3 244.0L492.7 244.0A16 16 0 0 1 508.4 263.1L410.4 767.1A16 16 0 0 1 394.7 780.0L319.3 780.0A16 16 0 0 1 303.6 760.9L401.6 256.9A16 16 0 0 1 417.3 244.0Z"/>
+      <path d="M629.3 244.0L704.7 244.0A16 16 0 0 1 720.4 263.1L622.4 767.1A16 16 0 0 1 606.7 780.0L531.3 780.0A16 16 0 0 1 515.6 760.9L613.6 256.9A16 16 0 0 1 629.3 244.0Z"/>
+    </g>
+    <path id="bar-top" d="M324.7 360.0L752.1 360.0A16 16 0 0 1 767.8 379.1L753.8 451.1A16 16 0 0 1 738.1 464.0L310.7 464.0A16 16 0 0 1 295.0 444.9L309.0 372.9A16 16 0 0 1 324.7 360.0Z"/>
+    <path id="bar-bottom" d="M285.9 560.0L713.3 560.0A16 16 0 0 1 729.0 579.1L715.0 651.1A16 16 0 0 1 699.3 664.0L271.9 664.0A16 16 0 0 1 256.2 644.9L270.2 572.9A16 16 0 0 1 285.9 560.0Z"/>
+    <g id="bars">
+      <use href="#bar-top"/>
+      <use href="#bar-bottom"/>
+    </g>
+    <clipPath id="clip-bar-top"><use href="#bar-top"/></clipPath>
+    <clipPath id="clip-bar-bottom"><use href="#bar-bottom"/></clipPath>
+
+    <!-- Ground -->
+    <linearGradient id="frost" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="924">
+      <stop offset="0" stop-color="#f1f4f6"/>
+      <stop offset="1" stop-color="#cfd8de"/>
+    </linearGradient>
+    <linearGradient id="tile-edge" gradientUnits="userSpaceOnUse" x1="0" y1="100" x2="0" y2="924">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.4" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="0.7" stop-color="#22323c" stop-opacity="0"/>
+      <stop offset="1" stop-color="#22323c" stop-opacity="0.12"/>
+    </linearGradient>
+
+    <!-- Glass bodies -->
+    <linearGradient id="red" gradientUnits="userSpaceOnUse" x1="0" y1="244" x2="0" y2="780">
+      <stop offset="0" stop-color="#ff7d6e"/>
+      <stop offset="0.55" stop-color="#ef3d3a"/>
+      <stop offset="1" stop-color="#c21f33"/>
+    </linearGradient>
+    <linearGradient id="clear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#f4f9fb" stop-opacity="0.52"/>
+    </linearGradient>
+
+    <!-- Shadows: a tight contact one and a wide ambient one, tinted by the glass -->
+    <filter id="contact-red" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dy="4" result="fall"/>
+      <feFlood flood-color="#4a0c12" flood-opacity="0.22"/>
+      <feComposite operator="in" in2="fall"/>
+    </filter>
+    <filter id="ambient-red" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22"/>
+      <feOffset dy="26" result="fall"/>
+      <feFlood flood-color="#4a0c12" flood-opacity="0.16"/>
+      <feComposite operator="in" in2="fall"/>
+    </filter>
+    <filter id="contact-clear" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dy="4" result="fall"/>
+      <feFlood flood-color="#1c2a33" flood-opacity="0.22"/>
+      <feComposite operator="in" in2="fall"/>
+    </filter>
+    <filter id="ambient-clear" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="22"/>
+      <feOffset dy="26" result="fall"/>
+      <feFlood flood-color="#1c2a33" flood-opacity="0.17"/>
+      <feComposite operator="in" in2="fall"/>
+    </filter>
+    <filter id="tile-shadow" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="12"/>
+      <feOffset dy="10"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.3"/></feComponentTransfer>
+    </filter>
+    <filter id="refract" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+
+    <!--
+      Light inside the glass: everything outside the shape, moved by dy and
+      blurred, kept where it overlaps the shape. Moved down it lights the
+      top edges; moved up, the bottom ones; unmoved, every edge.
+    -->
+    <filter id="edge" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feGaussianBlur stdDeviation="2.5"/>
+      <feComposite in2="SourceAlpha" operator="in" result="band"/>
+      <feFlood flood-color="#22323c" flood-opacity="0.3"/>
+      <feComposite in2="band" operator="in"/>
+    </filter>
+    <filter id="thick-red" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feOffset dy="-12"/>
+      <feGaussianBlur stdDeviation="10"/>
+      <feComposite in2="SourceAlpha" operator="in" result="band"/>
+      <feFlood flood-color="#6e0f1c" flood-opacity="0.25"/>
+      <feComposite in2="band" operator="in"/>
+    </filter>
+    <filter id="lit" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feOffset dy="14"/>
+      <feGaussianBlur stdDeviation="12"/>
+      <feComposite in2="SourceAlpha" operator="in" result="band"/>
+      <feFlood flood-color="#fff" flood-opacity="0.6"/>
+      <feComposite in2="band" operator="in"/>
+    </filter>
+    <filter id="spec-bottom" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feOffset dy="-2.5"/>
+      <feGaussianBlur stdDeviation="1.4"/>
+      <feComposite in2="SourceAlpha" operator="in" result="band"/>
+      <feFlood flood-color="#fff" flood-opacity="0.6"/>
+      <feComposite in2="band" operator="in"/>
+    </filter>
+    <filter id="spec-top" filterUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+      <feOffset dy="2.5"/>
+      <feGaussianBlur stdDeviation="1"/>
+      <feComposite in2="SourceAlpha" operator="in" result="band"/>
+      <feFlood flood-color="#fff" flood-opacity="1"/>
+      <feComposite in2="band" operator="in"/>
+    </filter>
+
+    <!-- What the crossbars see: the ground and the red uprights -->
+    <g id="behind">
+      <use href="#tile" fill="url(#frost)"/>
+      <use href="#uprights" filter="url(#ambient-red)"/>
+      <use href="#uprights" filter="url(#contact-red)"/>
+      <use href="#uprights" fill="url(#red)"/>
+      <use href="#uprights" filter="url(#thick-red)"/>
+      <use href="#uprights" filter="url(#lit)"/>
+      <use href="#uprights" filter="url(#spec-bottom)"/>
+      <use href="#uprights" filter="url(#spec-top)"/>
+    </g>
+  </defs>
+
+  <use href="#tile" filter="url(#tile-shadow)"/>
+
+  <g clip-path="url(#tile-clip)">
+    <use href="#behind"/>
+
+    <!-- Crossbars -->
+    <use href="#bars" filter="url(#ambient-clear)"/>
+    <use href="#bars" filter="url(#contact-clear)"/>
+    <g clip-path="url(#clip-bar-top)">
+      <use href="#behind" filter="url(#refract)" transform="translate(531.4 412) scale(1.1) translate(-531.4 -412)"/>
+    </g>
+    <g clip-path="url(#clip-bar-bottom)">
+      <use href="#behind" filter="url(#refract)" transform="translate(492.6 612) scale(1.1) translate(-492.6 -612)"/>
+    </g>
+    <use href="#bars" fill="url(#clear)"/>
+    <use href="#bars" filter="url(#edge)"/>
+    <use href="#bars" filter="url(#lit)"/>
+    <use href="#bars" filter="url(#spec-bottom)"/>
+    <use href="#bars" filter="url(#spec-top)"/>
+
+    <!-- The tile's own glass edge -->
+    <use href="#tile" fill="none" stroke="url(#tile-edge)" stroke-width="6"/>
+  </g>
+</svg>

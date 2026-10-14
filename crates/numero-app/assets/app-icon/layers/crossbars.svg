@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!--
+    Icon Composer foreground layer, on top: the two crossbars, flat and
+    opaque, scaled like uprights.svg. Set them to clear glass in Icon
+    Composer so the uprights refract through them.
+  -->
+  <g fill="#ffffff" transform="translate(512 512) scale(1.2427) translate(-512 -512)">
+    <path d="M324.7 360.0L752.1 360.0A16 16 0 0 1 767.8 379.1L753.8 451.1A16 16 0 0 1 738.1 464.0L310.7 464.0A16 16 0 0 1 295.0 444.9L309.0 372.9A16 16 0 0 1 324.7 360.0Z"/>
+    <path d="M285.9 560.0L713.3 560.0A16 16 0 0 1 729.0 579.1L715.0 651.1A16 16 0 0 1 699.3 664.0L271.9 664.0A16 16 0 0 1 256.2 644.9L270.2 572.9A16 16 0 0 1 285.9 560.0Z"/>
+  </g>
+</svg>
