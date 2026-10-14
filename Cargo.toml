@@ -13,6 +13,7 @@ publish = false
 [workspace.dependencies]
 numero-engine = { path = "crates/numero-engine" }
 numero-rates = { path = "crates/numero-rates" }
+numero-extensions = { path = "crates/numero-extensions" }
 
 # The app on Linux and macOS. GPUI Kit pins the GPUI snapshot it was built
 # against exactly; it goes by `gpui` so GPUI's macros resolve through it.

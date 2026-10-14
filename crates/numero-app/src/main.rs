@@ -17,6 +17,8 @@
 //! - `frame`, `title_bar` and `blur`: the window's own rounded frame and
 //!   title bar, and the blur behind its translucent background.
 //! - `menus`: the macOS menu bar.
+//! - `system`: tray, global shortcut, login item, always on top, window
+//!   frame and single instance.
 
 mod app;
 mod assets;
@@ -34,6 +36,7 @@ mod rates;
 mod results;
 mod settings;
 mod settings_panel;
+mod system;
 mod theme;
 mod title_bar;
 mod view;
