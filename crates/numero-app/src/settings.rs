@@ -1,6 +1,6 @@
-//! The user's settings: how results are formatted, the text size and light
-//! or dark. Kept in `<config dir>/numero/settings.json` and applied as they
-//! change.
+//! The user's settings: how results are formatted, the text size, light or
+//! dark, the result column's width and the window's place in the desktop.
+//! Kept in `<config dir>/numero/settings.json` and applied as they change.
 //!
 //! Every value read from the file is checked: a field that is missing or
 //! out of range takes its default, so a hand-edited file can't break the
@@ -15,12 +15,19 @@ use serde::{Deserialize, Serialize};
 
 const FILE: &str = "numero/settings.json";
 
-/// Numi's text size in its default window: its Dynamic mode gives 13 up
-/// to 400 px wide (`docs/numi-spec-ui.md` §1.3).
-pub(crate) const DEFAULT_FONT_SIZE: f32 = 13.;
+/// The text never gets smaller or larger than this, zoomed or not.
 pub(crate) const MIN_FONT_SIZE: f32 = 10.;
 pub(crate) const MAX_FONT_SIZE: f32 = 36.;
+/// How far zooming may move the text from its font size's.
+pub(crate) const MIN_ZOOM: f32 = -4.;
+pub(crate) const MAX_ZOOM: f32 = 24.;
 pub(crate) const MAX_PRECISION: usize = 10;
+
+/// Numi's result column is 120 px wide to begin with
+/// (`docs/numi-spec-ui.md` §1.4).
+pub(crate) const DEFAULT_RESULT_PANE_WIDTH: f32 = 120.;
+const MIN_RESULT_PANE_WIDTH: f32 = 40.;
+const MAX_RESULT_PANE_WIDTH: f32 = 2000.;
 
 /// The characters a number may group its thousands with.
 pub(crate) const GROUPINGS: [Option<char>; 4] = [None, Some(','), Some('.'), Some(' ')];
@@ -37,6 +44,44 @@ pub(crate) enum Appearance {
     Dark,
 }
 
+/// Numi's font size choice (`docs/numi-spec-ui.md` §1.3): three fixed
+/// sizes, or Dynamic, which grows with the window.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub(crate) enum FontSize {
+    #[default]
+    Dynamic,
+    Small,
+    Medium,
+    Large,
+}
+
+impl FontSize {
+    pub(crate) const ALL: [Self; 4] = [Self::Dynamic, Self::Small, Self::Medium, Self::Large];
+
+    pub(crate) const fn label(self) -> &'static str {
+        match self {
+            Self::Dynamic => "Dynamic",
+            Self::Small => "Small",
+            Self::Medium => "Medium",
+            Self::Large => "Large",
+        }
+    }
+
+    /// The text size, in points, in a window `window_width` wide.
+    pub(crate) fn points(self, window_width: f32) -> f32 {
+        match self {
+            Self::Small => 13.,
+            Self::Medium => 15.,
+            Self::Large => 17.,
+            Self::Dynamic if window_width > 800. => 17.,
+            Self::Dynamic if window_width > 600. => 15.,
+            Self::Dynamic if window_width > 400. => 14.,
+            Self::Dynamic => 13.,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub(crate) struct Settings {
@@ -45,8 +90,14 @@ pub(crate) struct Settings {
     pub grouping_separator: Option<char>,
     pub ppi: f64,
     pub em_px: f64,
-    pub font_size: f32,
+    pub text_size: FontSize,
+    /// What the zoom shortcuts added to the font size's text size, in px.
+    pub zoom: f32,
     pub appearance: Appearance,
+    /// The result column's width before the window's bounds clamp it, under
+    /// Numi's own key.
+    #[serde(rename = "resultPaneWidth")]
+    pub result_pane_width: f32,
     /// Numi's "Show in menu bar": a tray / status item, no dock icon on
     /// macOS, and the window toggles from the item.
     pub menu_bar_mode: bool,
@@ -55,6 +106,9 @@ pub(crate) struct Settings {
     /// The global shortcut that shows and hides the window, as a GPUI
     /// keystroke (`ctrl-alt-space`). Numi ships none.
     pub hotkey: Option<String>,
+    /// Where the calculations are kept, one `.txt` file each; `None` is the
+    /// default folder under the data directory.
+    pub calculations_dir: Option<PathBuf>,
 }
 
 impl Default for Settings {
@@ -66,11 +120,14 @@ impl Default for Settings {
             grouping_separator: config.grouping_separator,
             ppi: config.ppi,
             em_px: config.em_px,
-            font_size: DEFAULT_FONT_SIZE,
+            text_size: FontSize::default(),
+            zoom: 0.,
             appearance: Appearance::default(),
+            result_pane_width: DEFAULT_RESULT_PANE_WIDTH,
             menu_bar_mode: false,
             always_on_top: false,
             hotkey: None,
+            calculations_dir: None,
         }
     }
 }
@@ -103,15 +160,19 @@ impl Settings {
             grouping_separator,
             ppi: positive(self.ppi, default.ppi),
             em_px: positive(self.em_px, default.em_px),
-            font_size: if self.font_size.is_finite() {
-                self.font_size.clamp(MIN_FONT_SIZE, MAX_FONT_SIZE)
-            } else {
-                DEFAULT_FONT_SIZE
-            },
+            text_size: self.text_size,
+            zoom: clamp_or(self.zoom, MIN_ZOOM, MAX_ZOOM, default.zoom),
             appearance: self.appearance,
+            result_pane_width: clamp_or(
+                self.result_pane_width,
+                MIN_RESULT_PANE_WIDTH,
+                MAX_RESULT_PANE_WIDTH,
+                default.result_pane_width,
+            ),
             menu_bar_mode: self.menu_bar_mode,
             always_on_top: self.always_on_top,
             hotkey: self.hotkey.filter(|hotkey| !hotkey.trim().is_empty()),
+            calculations_dir: self.calculations_dir.filter(|dir| dir.is_absolute()),
         }
     }
 
@@ -124,6 +185,21 @@ impl Settings {
             ppi: self.ppi,
             em_px: self.em_px,
         }
+    }
+
+    /// The text size in a window `window_width` wide: the font size's,
+    /// zoomed, within the limits.
+    pub(crate) fn points(&self, window_width: f32) -> f32 {
+        (self.text_size.points(window_width) + self.zoom).clamp(MIN_FONT_SIZE, MAX_FONT_SIZE)
+    }
+}
+
+/// `value` within `min..=max`, or `fallback` when it isn't a number.
+fn clamp_or(value: f32, min: f32, max: f32, fallback: f32) -> f32 {
+    if value.is_finite() {
+        value.clamp(min, max)
+    } else {
+        fallback
     }
 }
 
@@ -176,82 +252,4 @@ impl SettingsFile {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn saved_settings_load_back() {
-        let dir = tempfile::tempdir().unwrap();
-        let file = SettingsFile::in_dir(dir.path());
-        let settings = Settings {
-            precision: 4,
-            decimal_separator: ',',
-            grouping_separator: Some('.'),
-            appearance: Appearance::Dark,
-            font_size: 20.,
-            ..Settings::default()
-        };
-
-        file.save(&settings).unwrap();
-
-        assert_eq!(file.load(), settings);
-    }
-
-    #[test]
-    fn missing_or_broken_settings_are_the_defaults() {
-        let dir = tempfile::tempdir().unwrap();
-        let file = SettingsFile::in_dir(dir.path());
-        assert_eq!(file.load(), Settings::default());
-
-        fs::create_dir_all(dir.path().join("numero")).unwrap();
-        fs::write(dir.path().join(FILE), "{ nope").unwrap();
-        assert_eq!(file.load(), Settings::default());
-    }
-
-    #[test]
-    fn a_partial_file_keeps_the_rest_at_their_defaults() {
-        let dir = tempfile::tempdir().unwrap();
-        let file = SettingsFile::in_dir(dir.path());
-        fs::create_dir_all(dir.path().join("numero")).unwrap();
-        fs::write(dir.path().join(FILE), r#"{"precision": 5}"#).unwrap();
-
-        let settings = file.load();
-
-        assert_eq!(settings.precision, 5);
-        assert_eq!(settings.ppi, Settings::default().ppi);
-    }
-
-    #[test]
-    fn values_out_of_range_take_their_defaults() {
-        let settings = Settings {
-            precision: 99,
-            decimal_separator: 'x',
-            grouping_separator: Some('.'),
-            ppi: -3.,
-            em_px: f64::NAN,
-            font_size: 300.,
-            appearance: Appearance::Light,
-            hotkey: Some("  ".into()),
-            ..Settings::default()
-        }
-        .checked();
-
-        assert_eq!(settings.precision, MAX_PRECISION);
-        assert_eq!(settings.decimal_separator, '.');
-        // Equal to the decimal separator, so dropped.
-        assert_eq!(settings.grouping_separator, None);
-        assert_eq!(settings.ppi, Settings::default().ppi);
-        assert_eq!(settings.em_px, Settings::default().em_px);
-        assert_eq!(settings.font_size, MAX_FONT_SIZE);
-        assert_eq!(settings.hotkey, None);
-    }
-
-    #[test]
-    fn the_engine_gets_the_formatting_settings() {
-        let settings = Settings {
-            precision: 3,
-            ..Settings::default()
-        };
-        assert_eq!(settings.config().precision, 3);
-    }
-}
+mod tests;

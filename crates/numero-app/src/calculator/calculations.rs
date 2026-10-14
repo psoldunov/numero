@@ -7,55 +7,75 @@ use gpui::{App, Context, Entity, Window};
 use gpui_component::input::{InputEvent, InputState};
 
 use super::Calculator;
-use crate::library::{CalculationId, Entry};
+use crate::library::{CalculationId, Entry, Saved};
 
 /// How long after the last edit the calculation is saved.
 const SAVE_AFTER: Duration = Duration::from_millis(500);
 
 impl Calculator {
     pub(super) fn schedule_save(&mut self, cx: &mut Context<'_, Self>) {
-        let (Some(library), Some(id)) = (self.library.clone(), self.current.clone()) else {
+        if self.library.is_none() {
             return;
-        };
+        }
         // Replacing the task drops, and so cancels, the one before.
         self._save = Some(cx.spawn(async move |this, cx| {
             cx.background_executor().timer(SAVE_AFTER).await;
-            let Ok((text, revision)) =
-                this.read_with(cx, |this, cx| (this.text(cx), this.revision))
-            else {
-                return;
-            };
-            let saved = cx
-                .background_executor()
-                .spawn(async move { library.save(&id, &text) })
-                .await;
-            match saved {
-                Ok(()) => {
-                    let _ = this.update(cx, |this, _| this.saved_revision = revision);
-                }
-                Err(error) => tracing::error!(%error, "couldn't save the calculation"),
-            }
+            let _ = this.update(cx, |this, cx| this.write_now(cx));
         }));
     }
 
     /// Saves the open calculation at once, if it changed since its last
-    /// save: before quitting or switching to another.
-    pub(super) fn save_now(&mut self, cx: &App) {
-        let (Some(library), Some(id)) = (&self.library, &self.current) else {
-            return;
-        };
+    /// save: before quitting, switching to another, or `system` closing the
+    /// window to hide it.
+    pub(crate) fn save_now(&mut self, cx: &mut Context<'_, Self>) {
+        self._save = None;
+        self.write_now(cx);
+    }
+
+    /// Writes the open calculation if it has unsaved edits. A calculation
+    /// shown before it had a file gets one now. When the file changed on
+    /// disk meanwhile, the library keeps that version and writes the edits
+    /// to a conflict copy, which becomes the open calculation.
+    fn write_now(&mut self, cx: &mut Context<'_, Self>) {
         if self.revision == self.saved_revision {
             return;
         }
-        self._save = None;
-        match library.save(id, &self.text(cx)) {
-            Ok(()) => self.saved_revision = self.revision,
+        let text = self.text(cx);
+        let Some(library) = self.library.as_mut() else {
+            return;
+        };
+        let Some(id) = self.current.clone() else {
+            match library.create(&text) {
+                Ok(id) => {
+                    self.current = Some(id);
+                    self.saved_revision = self.revision;
+                }
+                Err(error) => tracing::error!(%error, "couldn't keep the new calculation"),
+            }
+            return;
+        };
+        match library.save(&id, &text) {
+            Ok(Saved::Written) => self.saved_revision = self.revision,
+            Ok(Saved::Conflict { copy }) => {
+                tracing::warn!(
+                    ?id,
+                    ?copy,
+                    "the calculation changed elsewhere; kept the edits in a copy"
+                );
+                self.saved_revision = self.revision;
+                self.show_notice(
+                    format!("Changed elsewhere: your edits are in “{}”", copy.stem()),
+                    cx,
+                );
+                self.current = Some(copy);
+                self.refresh_entries(cx);
+            }
             Err(error) => tracing::error!(%error, "couldn't save the calculation"),
         }
     }
 
     /// Shows `text` as the open calculation.
-    fn show(
+    pub(super) fn show(
         &mut self,
         id: Option<CalculationId>,
         text: &str,
@@ -77,14 +97,28 @@ impl Calculator {
 
     /// Adds an empty calculation and opens it.
     pub(crate) fn new_calculation(&mut self, window: &mut Window, cx: &mut Context<'_, Self>) {
+        self.open_new_with("", window, cx);
+    }
+
+    /// Adds a calculation holding `text` and opens it: New, Import, the
+    /// samples and the syntax guide.
+    pub(crate) fn open_new_with(
+        &mut self,
+        text: &str,
+        window: &mut Window,
+        cx: &mut Context<'_, Self>,
+    ) {
         self.save_now(cx);
         let Some(library) = self.library.as_mut() else {
-            self.show(None, "", window, cx);
+            self.show(None, text, window, cx);
             return;
         };
-        match library.create("") {
-            Ok(id) => self.show(Some(id), "", window, cx),
-            Err(error) => tracing::error!(%error, "couldn't add a calculation"),
+        match library.create(text) {
+            Ok(id) => self.show(Some(id), text, window, cx),
+            Err(error) => {
+                tracing::error!(%error, "couldn't add a calculation");
+                self.show_notice("Couldn't add a calculation", cx);
+            }
         }
     }
 

@@ -1,193 +1,225 @@
-//! The settings, in a popover over the gear in the bottom-left corner. Each
-//! change applies at once and is saved.
+//! The Preferences window, as Numi's (`docs/numi-spec-ui.md` §1.1): a
+//! General tab and an Extensions tab. Every change applies at once and is
+//! saved; the settings themselves live with the calculator, which this
+//! window changes through `Calculator::update_settings`.
+//!
+//! - `chrome`: the window's options and its title bar.
+//! - `general`: precision, font size, night mode, the window's place in
+//!   the desktop and the global shortcut.
+//! - `recorder`: the global shortcut's recorder.
+//! - `formatting`: Numero's own number format settings.
+//! - `folder`: where the calculations are kept.
+//! - `extensions`: the Extensions tab.
 
-use gpui::{App, Div, Entity, IntoElement, ParentElement as _, Styled as _, div, px};
-use gpui_component::input::Input;
-use gpui_component::{Sizable as _, h_flex, v_flex};
+mod chrome;
+mod extensions;
+mod folder;
+mod formatting;
+mod general;
+mod recorder;
+
+use gpui::{
+    AnyWindowHandle, App, AppContext as _, Context, Entity, FocusHandle, Focusable, Global,
+    InteractiveElement as _, IntoElement, ParentElement as _, Render,
+    StatefulInteractiveElement as _, Styled as _, Subscription, WeakEntity, Window, div, px,
+};
+use gpui_component::input::InputState;
+use gpui_component::tab::TabBar;
+use gpui_component::{ActiveTheme as _, v_flex};
 
 use crate::calculator::Calculator;
-use crate::settings::{Appearance, GROUPINGS, MAX_PRECISION, Settings};
-use crate::widgets::{chip, row};
+use crate::calculator::main_window;
+use crate::settings::Settings;
 
-const WIDTH: f32 = 290.;
-
-/// The panel for `this`'s settings.
-pub(crate) fn content(this: &Entity<Calculator>, cx: &mut App) -> Div {
-    let calculator = this.read(cx);
-    let settings = calculator.settings.clone();
-    let (ppi, em) = (calculator.ppi_input.clone(), calculator.em_input.clone());
-    v_flex()
-        .w(px(WIDTH))
-        .gap_2()
-        .text_sm()
-        .child(row(
-            "Decimal places",
-            stepper(
-                this,
-                "precision",
-                settings.precision.to_string(),
-                |settings, by| {
-                    settings.precision = settings
-                        .precision
-                        .saturating_add_signed(by)
-                        .min(MAX_PRECISION);
-                },
-                cx,
-            ),
-            cx,
-        ))
-        .child(row(
-            "Decimal separator",
-            decimal_chips(this, &settings, cx),
-            cx,
-        ))
-        .child(row("Thousands", grouping_chips(this, &settings, cx), cx))
-        .child(row(
-            "Pixels per inch",
-            Input::new(&ppi).xsmall().w(px(64.)),
-            cx,
-        ))
-        .child(row(
-            "Pixels per em",
-            Input::new(&em).xsmall().w(px(64.)),
-            cx,
-        ))
-        .child(row(
-            "Text size",
-            stepper(
-                this,
-                "font-size",
-                format!("{}", settings.font_size),
-                |settings, by| {
-                    settings.font_size += by as f32;
-                },
-                cx,
-            ),
-            cx,
-        ))
-        .child(row("Appearance", appearance_chips(this, &settings, cx), cx))
+/// The tabs, in Numi's order.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Tab {
+    General,
+    Extensions,
 }
 
-/// Applies `change` to `this`'s settings.
-fn update(
-    this: &Entity<Calculator>,
-    change: impl FnOnce(&mut Settings) + 'static,
-    window: &mut gpui::Window,
-    cx: &mut App,
-) {
-    this.update(cx, |calculator, cx| {
-        calculator.update_settings(change, window, cx)
+/// The open Preferences window, so a second "Preferences…" brings it
+/// forward rather than opening another.
+struct PreferencesWindow(AnyWindowHandle);
+
+impl Global for PreferencesWindow {}
+
+/// Brings the Preferences window forward, opening it if it isn't open.
+pub(crate) fn open(cx: &mut App) {
+    if let Some(PreferencesWindow(window)) = cx.try_global::<PreferencesWindow>()
+        && window
+            .update(cx, |_, window, _| window.activate_window())
+            .is_ok()
+    {
+        return;
+    }
+    let Some(calculator) = main_window::calculator(cx) else {
+        tracing::warn!("no calculator to show the preferences of");
+        return;
+    };
+    let opened = gpui::open_window(chrome::window_options(cx), cx, |window, cx| {
+        crate::frame::connect(window, cx);
+        cx.new(|cx| Preferences::new(calculator.downgrade(), window, cx))
     });
+    match opened {
+        Ok((window, _)) => {
+            cx.set_global(PreferencesWindow(window));
+            cx.activate(true);
+        }
+        Err(error) => tracing::error!(%error, "couldn't open the preferences"),
+    }
 }
 
-/// `−`, the value, `+`.
-fn stepper(
-    this: &Entity<Calculator>,
-    id: &'static str,
-    value: String,
-    step: fn(&mut Settings, isize),
-    cx: &App,
-) -> impl IntoElement {
-    let (down, up) = (this.clone(), this.clone());
-    h_flex()
-        .gap_1()
-        .child(chip(
-            (id, 0usize),
-            "−",
-            false,
-            move |_, window, cx| {
-                update(&down, move |settings| step(settings, -1), window, cx);
-            },
-            cx,
-        ))
-        .child(div().min_w(px(24.)).flex().justify_center().child(value))
-        .child(chip(
-            (id, 1usize),
-            "+",
-            false,
-            move |_, window, cx| {
-                update(&up, move |settings| step(settings, 1), window, cx);
-            },
-            cx,
-        ))
+pub(crate) struct Preferences {
+    calculator: WeakEntity<Calculator>,
+    pub(crate) tab: Tab,
+    /// The typed fields: precision, and the ppi and em sizes.
+    precision: Entity<InputState>,
+    ppi: Entity<InputState>,
+    em: Entity<InputState>,
+    /// Whether Numero opens at login, as the system said last.
+    launch_at_login: bool,
+    /// Why the last change to it failed.
+    login_error: Option<String>,
+    recorder: recorder::Recorder,
+    /// The calculations folder's last error, or what moving them did.
+    folder_status: Option<String>,
+    focus: FocusHandle,
+    _subscriptions: Vec<Subscription>,
 }
 
-fn decimal_chips(this: &Entity<Calculator>, settings: &Settings, cx: &App) -> impl IntoElement {
-    h_flex()
-        .gap_0p5()
-        .children(['.', ','].into_iter().enumerate().map(|(ix, separator)| {
-            let this = this.clone();
-            chip(
-                ("decimal", ix),
-                separator.to_string(),
-                settings.decimal_separator == separator,
-                move |_, window, cx| {
-                    update(
-                        &this,
-                        move |settings| settings.decimal_separator = separator,
-                        window,
-                        cx,
-                    );
-                },
-                cx,
+impl Preferences {
+    pub(crate) fn new(
+        calculator: WeakEntity<Calculator>,
+        window: &mut Window,
+        cx: &mut Context<'_, Self>,
+    ) -> Self {
+        let settings = calculator
+            .read_with(cx, |calculator, _| calculator.settings.clone())
+            .unwrap_or_default();
+        let field = |value: String, window: &mut Window, cx: &mut Context<'_, Self>| {
+            cx.new(|cx| InputState::new(window, cx).default_value(value))
+        };
+        let precision = field(settings.precision.to_string(), window, cx);
+        let ppi = field(formatting::number(settings.ppi), window, cx);
+        let em = field(formatting::number(settings.em_px), window, cx);
+        let mut subscriptions = vec![
+            cx.subscribe_in(&precision, window, Self::on_precision_event),
+            cx.subscribe_in(&ppi, window, Self::on_size_event),
+            cx.subscribe_in(&em, window, Self::on_size_event),
+        ];
+        if let Some(calculator) = calculator.upgrade() {
+            subscriptions.push(cx.observe(&calculator, |_, _, cx| cx.notify()));
+        }
+        let focus = cx.focus_handle();
+        subscriptions.push(cx.on_blur(&focus, window, |this, _, cx| {
+            this.recorder.stop(cx);
+        }));
+        Self {
+            calculator,
+            tab: Tab::General,
+            precision,
+            ppi,
+            em,
+            launch_at_login: crate::system::launch_at_login(),
+            login_error: None,
+            recorder: recorder::Recorder::default(),
+            folder_status: None,
+            focus,
+            _subscriptions: subscriptions,
+        }
+    }
+
+    /// The settings as they stand.
+    pub(crate) fn settings(&self, cx: &App) -> Settings {
+        self.calculator
+            .read_with(cx, |calculator, _| calculator.settings.clone())
+            .unwrap_or_default()
+    }
+
+    /// Changes the settings, which applies and saves them.
+    pub(crate) fn update(&self, change: impl FnOnce(&mut Settings), cx: &mut Context<'_, Self>) {
+        let updated = self.calculator.update(cx, |calculator, cx| {
+            calculator.update_settings(change, cx);
+        });
+        if updated.is_err() {
+            tracing::warn!("the calculator is gone; the change is lost");
+        }
+    }
+
+    /// Turns opening at login on or off, through the system.
+    pub(crate) fn set_launch_at_login(&mut self, enabled: bool, cx: &mut Context<'_, Self>) {
+        match crate::system::set_launch_at_login(enabled) {
+            Ok(()) => self.login_error = None,
+            Err(error) => {
+                tracing::error!(%error, enabled, "couldn't change opening at login");
+                self.login_error = Some(error);
+            }
+        }
+        self.launch_at_login = crate::system::launch_at_login();
+        cx.notify();
+    }
+
+    pub(crate) fn select_tab(&mut self, tab: Tab, cx: &mut Context<'_, Self>) {
+        self.tab = tab;
+        self.recorder.stop(cx);
+        cx.notify();
+    }
+
+    fn tabs(&self, cx: &mut Context<'_, Self>) -> impl IntoElement + use<> {
+        let selected = match self.tab {
+            Tab::General => 0,
+            Tab::Extensions => 1,
+        };
+        div().flex().justify_center().pb_3().child(
+            TabBar::new("preferences-tabs")
+                .segmented()
+                .selected_index(selected)
+                .child("General")
+                .child("Extensions")
+                .on_click(cx.listener(|this, index: &usize, _, cx| {
+                    let tab = if *index == 0 {
+                        Tab::General
+                    } else {
+                        Tab::Extensions
+                    };
+                    this.select_tab(tab, cx);
+                })),
+        )
+    }
+}
+
+impl Focusable for Preferences {
+    fn focus_handle(&self, _: &App) -> FocusHandle {
+        self.focus.clone()
+    }
+}
+
+impl Render for Preferences {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<'_, Self>) -> impl IntoElement {
+        let body = match self.tab {
+            Tab::General => self.general(window, cx).into_any_element(),
+            Tab::Extensions => self.extensions(cx).into_any_element(),
+        };
+        v_flex()
+            .size_full()
+            .track_focus(&self.focus)
+            .text_sm()
+            .text_color(cx.theme().foreground)
+            .child(chrome::title_bar(window, cx))
+            .child(self.tabs(cx))
+            .child(
+                div()
+                    .id("preferences-body")
+                    .flex_1()
+                    .min_h_0()
+                    .overflow_y_scroll()
+                    .px(px(20.))
+                    .pb(px(16.))
+                    .child(body),
             )
-        }))
+    }
 }
 
-fn grouping_chips(this: &Entity<Calculator>, settings: &Settings, cx: &App) -> impl IntoElement {
-    h_flex()
-        .gap_0p5()
-        .children(GROUPINGS.into_iter().enumerate().map(|(ix, grouping)| {
-            let this = this.clone();
-            let label = match grouping {
-                None => "None".to_owned(),
-                Some(' ') => "Space".to_owned(),
-                Some(other) => other.to_string(),
-            };
-            let selected = settings.grouping_separator == grouping;
-            chip(
-                ("grouping", ix),
-                label,
-                selected,
-                move |_, window, cx| {
-                    update(
-                        &this,
-                        move |settings| settings.grouping_separator = grouping,
-                        window,
-                        cx,
-                    );
-                },
-                cx,
-            )
-        }))
-}
-
-fn appearance_chips(this: &Entity<Calculator>, settings: &Settings, cx: &App) -> impl IntoElement {
-    let choices = [
-        (Appearance::System, "System"),
-        (Appearance::Light, "Light"),
-        (Appearance::Dark, "Dark"),
-    ];
-    h_flex().gap_0p5().children(
-        choices
-            .into_iter()
-            .enumerate()
-            .map(|(ix, (appearance, label))| {
-                let this = this.clone();
-                chip(
-                    ("appearance", ix),
-                    label,
-                    settings.appearance == appearance,
-                    move |_, window, cx| {
-                        update(
-                            &this,
-                            move |settings| settings.appearance = appearance,
-                            window,
-                            cx,
-                        );
-                    },
-                    cx,
-                )
-            }),
-    )
-}
+#[cfg(test)]
+mod tests;

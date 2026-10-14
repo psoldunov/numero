@@ -9,18 +9,27 @@ use gpui_component::input::InputEvent;
 
 use super::{Calculator, Sources, Zoom};
 use crate::app::{ZoomIn, ZoomOut};
-use crate::library::{Library, SAMPLE};
-use crate::settings::{DEFAULT_FONT_SIZE, MAX_FONT_SIZE, MIN_FONT_SIZE, SettingsFile};
+use crate::library::{Library, LibraryPaths, SAMPLE};
+use crate::settings::{MAX_ZOOM, MIN_ZOOM, SettingsFile};
 
 /// Sources kept under `dir`, as the app keeps them under the user's.
-fn kept_in(dir: &Path) -> Sources {
+pub(super) fn kept_in(dir: &Path) -> Sources {
     Sources {
-        library: Some(Library::open_in(&dir.join("calculations"))),
+        library: Some(LibraryPaths::in_dir(dir)),
         settings: Some(SettingsFile::in_dir(dir)),
+        extensions: None,
     }
 }
 
-fn open(cx: &mut TestAppContext, sources: Sources) -> (Entity<Calculator>, &mut VisualTestContext) {
+/// The library the calculator in `dir` keeps, read afresh.
+pub(super) fn library_in(dir: &Path) -> Library {
+    LibraryPaths::in_dir(dir).open(None)
+}
+
+pub(super) fn open(
+    cx: &mut TestAppContext,
+    sources: Sources,
+) -> (Entity<Calculator>, &mut VisualTestContext) {
     cx.update(gpui_component::init);
     let opened = cx.add_window_view(|window, cx| Calculator::new(sources, window, cx));
     let (_, window) = &opened;
@@ -30,7 +39,7 @@ fn open(cx: &mut TestAppContext, sources: Sources) -> (Entity<Calculator>, &mut 
 
 /// Replaces the whole calculation as typing would, so the editor reports
 /// it.
-fn type_document(view: &Entity<Calculator>, text: &str, cx: &mut VisualTestContext) {
+pub(super) fn type_document(view: &Entity<Calculator>, text: &str, cx: &mut VisualTestContext) {
     let editor = view.read_with(cx, |calculator, _| calculator.editor.clone());
     cx.update(|window, cx| {
         editor.update(cx, |editor, cx| {
@@ -41,15 +50,15 @@ fn type_document(view: &Entity<Calculator>, text: &str, cx: &mut VisualTestConte
     cx.run_until_parked();
 }
 
-fn draw(cx: &mut VisualTestContext) {
+pub(super) fn draw(cx: &mut VisualTestContext) {
     cx.update(|window, cx| window.draw(cx).clear(cx));
 }
 
-fn text(view: &Entity<Calculator>, cx: &mut VisualTestContext) -> String {
+pub(super) fn text(view: &Entity<Calculator>, cx: &mut VisualTestContext) -> String {
     view.read_with(cx, |calculator, cx| calculator.text(cx))
 }
 
-fn with_view(
+pub(super) fn with_view(
     view: &Entity<Calculator>,
     cx: &mut VisualTestContext,
     f: impl FnOnce(&mut Calculator, &mut gpui::Window, &mut gpui::Context<'_, Calculator>),
@@ -89,7 +98,7 @@ fn an_edit_is_saved_once_typing_pauses_and_reopens_next_time(cx: &mut TestAppCon
     let dir = tempfile::tempdir().unwrap();
     let (view, cx) = open(cx, kept_in(dir.path()));
     let id = view.read_with(cx, |calculator, _| calculator.current.clone().unwrap());
-    let library = Library::open_in(&dir.path().join("calculations"));
+    let mut library = library_in(dir.path());
 
     type_document(&view, "1 + 1", cx);
     assert_eq!(library.load(&id).unwrap(), SAMPLE);
@@ -97,9 +106,7 @@ fn an_edit_is_saved_once_typing_pauses_and_reopens_next_time(cx: &mut TestAppCon
     cx.executor().advance_clock(Duration::from_millis(600));
     cx.run_until_parked();
     assert_eq!(library.load(&id).unwrap(), "1 + 1");
-    let (reopened, _) = Library::open_in(&dir.path().join("calculations"))
-        .open_last()
-        .unwrap();
+    let (reopened, _) = library_in(dir.path()).open_last(SAMPLE).unwrap();
     assert_eq!(reopened, id);
 }
 
@@ -116,7 +123,7 @@ fn a_new_calculation_starts_empty_and_the_old_one_is_kept(cx: &mut TestAppContex
     let second = view.read_with(cx, |calculator, _| calculator.current.clone().unwrap());
     assert_ne!(first, second);
     // The edit made just before was saved on the way out, unwaited.
-    let library = Library::open_in(&dir.path().join("calculations"));
+    let mut library = library_in(dir.path());
     assert_eq!(library.load(&first).unwrap(), "2 * 21");
 
     with_view(&view, cx, |calculator, window, cx| {
@@ -176,7 +183,7 @@ fn deleting_asks_once_then_removes_the_calculation(cx: &mut TestAppContext) {
     with_view(&view, cx, |calculator, window, cx| {
         calculator.delete_pressed(&first, window, cx);
     });
-    let library = Library::open_in(&dir.path().join("calculations"));
+    let mut library = library_in(dir.path());
     assert!(library.load(&first).is_ok(), "the first press only asks");
 
     with_view(&view, cx, |calculator, window, cx| {
@@ -208,8 +215,8 @@ fn settings_apply_at_once_and_are_kept(cx: &mut TestAppContext) {
     type_document(&view, "1/3", cx);
     let before = view.read_with(cx, |calculator, _| calculator.rows[0].display.clone());
 
-    with_view(&view, cx, |calculator, window, cx| {
-        calculator.update_settings(|settings| settings.precision = 5, window, cx);
+    with_view(&view, cx, |calculator, _, cx| {
+        calculator.update_settings(|settings| settings.precision = 5, cx);
     });
 
     let after = view.read_with(cx, |calculator, _| calculator.rows[0].display.clone());
@@ -258,24 +265,25 @@ fn the_zoom_shortcuts_resize_the_text(cx: &mut TestAppContext) {
     let (view, cx) = open(cx, Sources::default());
     draw(cx);
 
+    let before = view.read_with(cx, |calculator, _| calculator.text_size());
     cx.dispatch_action(ZoomIn);
     assert_eq!(
         view.read_with(cx, |calculator, _| calculator.text_size()),
-        px(DEFAULT_FONT_SIZE + 2.)
+        before + px(2.)
     );
     cx.dispatch_action(ZoomOut);
     cx.dispatch_action(ZoomOut);
     assert_eq!(
         view.read_with(cx, |calculator, _| calculator.text_size()),
-        px(DEFAULT_FONT_SIZE - 2.)
+        before - px(2.)
     );
 }
 
 #[test]
 fn zooming_stays_within_its_limits() {
-    assert_eq!(Zoom::In.apply(MAX_FONT_SIZE), MAX_FONT_SIZE);
-    assert_eq!(Zoom::Out.apply(MIN_FONT_SIZE), MIN_FONT_SIZE);
-    assert_eq!(Zoom::Reset.apply(30.), DEFAULT_FONT_SIZE);
+    assert_eq!(Zoom::In.apply(MAX_ZOOM), MAX_ZOOM);
+    assert_eq!(Zoom::Out.apply(MIN_ZOOM), MIN_ZOOM);
+    assert_eq!(Zoom::Reset.apply(8.), 0.);
 }
 
 #[gpui::test]
@@ -318,3 +326,6 @@ fn a_result_stays_level_with_its_line_when_the_editor_scrolls(cx: &mut TestAppCo
     let copied = cx.read_from_clipboard().and_then(|item| item.text());
     assert_eq!(copied.as_deref(), Some("25"));
 }
+
+mod commands;
+mod sync;

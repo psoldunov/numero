@@ -1,12 +1,15 @@
-//! The settings, applied as they change and saved, and zooming, which is
-//! the text size setting moved by a shortcut.
+//! The settings, applied as they change and saved, and zooming, which moves
+//! the text size by a shortcut.
+//!
+//! The Preferences window changes the settings from its own window, so
+//! nothing here needs the calculator's: what does (the theme) runs once
+//! the change is over, in the calculator's window.
 
-use gpui::{Context, Entity, Window};
-use gpui_component::input::{InputEvent, InputState};
+use gpui::{Context, Window};
 use gpui_component::{Theme, ThemeMode};
 
 use super::Calculator;
-use crate::settings::{Appearance, DEFAULT_FONT_SIZE, MAX_FONT_SIZE, MIN_FONT_SIZE, Settings};
+use crate::settings::{Appearance, MAX_ZOOM, MIN_ZOOM, Settings};
 
 /// How far one zoom moves the text size.
 const ZOOM_STEP: f32 = 2.;
@@ -20,30 +23,26 @@ pub(crate) enum Zoom {
 }
 
 impl Zoom {
-    pub(crate) fn apply(self, size: f32) -> f32 {
+    /// The zoom after this one, from `zoom`.
+    pub(crate) fn apply(self, zoom: f32) -> f32 {
         match self {
-            Self::In => (size + ZOOM_STEP).min(MAX_FONT_SIZE),
-            Self::Out => (size - ZOOM_STEP).max(MIN_FONT_SIZE),
-            Self::Reset => DEFAULT_FONT_SIZE,
+            Self::In => (zoom + ZOOM_STEP).min(MAX_ZOOM),
+            Self::Out => (zoom - ZOOM_STEP).max(MIN_ZOOM),
+            Self::Reset => 0.,
         }
     }
 }
 
 impl Calculator {
-    pub(crate) fn zoom(&mut self, zoom: Zoom, window: &mut Window, cx: &mut Context<'_, Self>) {
-        self.update_settings(
-            |settings| settings.font_size = zoom.apply(settings.font_size),
-            window,
-            cx,
-        );
+    pub(crate) fn zoom(&mut self, zoom: Zoom, cx: &mut Context<'_, Self>) {
+        self.update_settings(|settings| settings.zoom = zoom.apply(settings.zoom), cx);
     }
 
     /// Changes the settings, keeps them in range, applies them and saves
-    /// them.
+    /// them, then tells the rest of the app.
     pub(crate) fn update_settings(
         &mut self,
         change: impl FnOnce(&mut Settings),
-        window: &mut Window,
         cx: &mut Context<'_, Self>,
     ) {
         let mut next = self.settings.clone();
@@ -52,17 +51,20 @@ impl Calculator {
         if next == self.settings {
             return;
         }
-        let appearance_changed = next.appearance != self.settings.appearance;
-        self.settings = next;
+        let old = std::mem::replace(&mut self.settings, next);
         if let Some(file) = &self.settings_file
             && let Err(error) = file.save(&self.settings)
         {
             tracing::error!(%error, "couldn't save the settings");
         }
         self.engine.set_config(self.settings.config());
-        if appearance_changed {
-            self.apply_appearance(window, cx);
+        if old.appearance != self.settings.appearance {
+            self.in_window(cx, Self::apply_appearance);
         }
+        let new = self.settings.clone();
+        // After the change is over, so the system's side may reach the
+        // window this change came from.
+        cx.defer(move |cx| crate::system::settings_changed(&old, &new, cx));
         self.evaluate(cx);
     }
 
@@ -73,37 +75,8 @@ impl Calculator {
             Appearance::Light => Theme::change(ThemeMode::Light, Some(window), cx),
             Appearance::Dark => Theme::change(ThemeMode::Dark, Some(window), cx),
         }
+        // The Preferences window draws with the theme too.
+        cx.refresh_windows();
         self.follow_theme(cx);
-    }
-
-    /// Takes a typed ppi or em size once it reads as a positive number.
-    pub(super) fn on_number_field_event(
-        &mut self,
-        field: &Entity<InputState>,
-        event: &InputEvent,
-        window: &mut Window,
-        cx: &mut Context<'_, Self>,
-    ) {
-        if !matches!(event, InputEvent::Change) {
-            return;
-        }
-        let Ok(value) = field.read(cx).value().trim().parse::<f64>() else {
-            return;
-        };
-        if !(value.is_finite() && value > 0.) {
-            return;
-        }
-        let ppi = field == &self.ppi_input;
-        self.update_settings(
-            |settings| {
-                if ppi {
-                    settings.ppi = value;
-                } else {
-                    settings.em_px = value;
-                }
-            },
-            window,
-            cx,
-        );
     }
 }

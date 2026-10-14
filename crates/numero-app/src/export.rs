@@ -1,6 +1,7 @@
 //! A calculation as plain text, for the Export menu: the lines with their
 //! results beside them, or the results alone.
 
+use std::ops::Range;
 use std::path::Path;
 
 use numero_engine::{LineKind, LineResult};
@@ -43,6 +44,36 @@ pub(crate) fn with_results(text: &str, results: &[LineResult]) -> String {
         })
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+/// What Edit → Copy All copies: the lines `selection` touches (every line
+/// when it is empty), each followed by ` = ` and its result where it has
+/// one, a line apart.
+pub(crate) fn copy_all(text: &str, results: &[LineResult], selection: Range<usize>) -> String {
+    let (first, last) = if selection.start < selection.end {
+        let end = selection.end.min(text.len());
+        // A selection ending at a line's start doesn't take that line.
+        let last_byte = end.saturating_sub(1).max(selection.start);
+        (line_of(text, selection.start), line_of(text, last_byte))
+    } else {
+        (0, usize::MAX)
+    };
+    text.split('\n')
+        .zip(displays(results).chain(std::iter::repeat(None)))
+        .enumerate()
+        .filter(|(index, _)| (first..=last).contains(index))
+        .map(|(_, (line, display))| match display {
+            Some(display) => format!("{} = {display}", line.trim_end()),
+            None => line.trim_end().to_owned(),
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// The index of the line holding byte `offset` of `text`.
+fn line_of(text: &str, offset: usize) -> usize {
+    text.get(..offset)
+        .map_or(0, |before| before.matches('\n').count())
 }
 
 /// The values alone, one per line, in order.
@@ -114,6 +145,27 @@ mod tests {
         assert_eq!(
             with_results(text, &results),
             "# Trip\n120 EUR in USD    $ 130.20\n\n3 * 4             12"
+        );
+    }
+
+    #[test]
+    fn copy_all_puts_each_result_after_an_equals_sign() {
+        let (text, results) = sample();
+        assert_eq!(
+            copy_all(text, &results, 0..0),
+            "# Trip\n120 EUR in USD = $ 130.20\n\n3 * 4 = 12"
+        );
+    }
+
+    #[test]
+    fn copy_all_takes_only_the_selected_lines() {
+        let (text, results) = sample();
+        // From inside line 1 to the start of line 3: lines 1 and 2.
+        let start = text.find("EUR").unwrap();
+        let end = text.find("3 *").unwrap();
+        assert_eq!(
+            copy_all(text, &results, start..end),
+            "120 EUR in USD = $ 130.20\n"
         );
     }
 

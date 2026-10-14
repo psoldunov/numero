@@ -154,7 +154,10 @@ fn window_controls(window: &Window, cx: &App) -> impl IntoElement {
             "close",
             IconName::WindowClose,
             true,
-            |window, _| window.remove_window(),
+            |window, cx| {
+                crate::calculator::main_window::save(cx);
+                window.remove_window();
+            },
             cx,
         ))
 }
