@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
-# Renders numero.svg into png/ (16 to 1024) and numero.icns.
+# Renders numero.svg into png/ (16 to 1024) and numero.icns, and into the
+# Linux hicolor theme under ../linux/icons.
 #
 # Chrome draws the SVG, because its filters (blur, offset, composite) are
 # what the glass is made of and smaller renderers skip them. ImageMagick
 # scales the 1024 render down, and a few lines of Python pack the icns.
+#
+# Linux icons are the same render cropped closer: Apple's grid leaves a
+# 100 margin round the tile, Linux themes fill most of the square, so the
+# crop keeps 48 of it (the tile fills 89%) and the shadow still fits. The
+# sizes up to 48 are sharpened a little so the crossbars hold.
 #
 # Usage: render.sh   (or `just icon` from the repository root)
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 sizes=(16 32 64 128 256 512)
+hicolor="$here/../linux/icons/hicolor"
+linux_sizes=(16 22 24 32 48 64 128 256 512)
 
 chrome=""
 for candidate in google-chrome google-chrome-stable chromium chromium-browser \
@@ -60,4 +68,18 @@ for kind, size in entries:
 (here / "numero.icns").write_bytes(b"icns" + struct.pack(">I", len(body) + 8) + body)
 PY
 
-echo "render.sh: wrote png/ and numero.icns"
+scratch="$(mktemp -d)"
+trap 'rm -rf "$scratch"' EXIT
+linux_master="$scratch/numero-928.png"
+magick "$here/png/numero-1024.png" -crop 928x928+48+48 +repage "$linux_master"
+for size in "${linux_sizes[@]}"; do
+  mkdir -p "$hicolor/${size}x${size}/apps"
+  sharpen=""
+  if ((size <= 48)); then
+    sharpen="0x0.6+0.8+0"
+  fi
+  magick "$linux_master" -filter Lanczos -resize "${size}x${size}" \
+    ${sharpen:+-unsharp "$sharpen"} -strip "$hicolor/${size}x${size}/apps/numero.png"
+done
+
+echo "render.sh: wrote png/, numero.icns and ../linux/icons/hicolor"
