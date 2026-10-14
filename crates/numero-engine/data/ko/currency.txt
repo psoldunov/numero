@@ -1,0 +1,9 @@
+# ko phrase tables, same format as data/en. English is always merged in.
+[currency]
+AUD.variants = Australian Dollars,Australian Dollar,호주 달러
+BTC.variants = Bitcoins,Bitcoin,B⃦,비트코인,BTC
+CNY.variants = Chinese Yuans,Chinese Yuan,yuan,yuans,元,RMB,위안
+EUR.variants = Euro,€,유로
+JPY.variants = Japanese Yen,Yen,¥,엔
+KPW.variants = North Korean won,won,KPW,₩,원
+KRW.variants = South Korean Won,Won,KRW,₩,원

@@ -1,0 +1,127 @@
+# pt-PT phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radiano,radianos
+degree.variants = grau,graus,arcgrau
+degree.format = º
+
+[area]
+ping.format = ping
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,raíz %@,rz %@,rz%@
+
+[dates]
+today.variants = hoje
+tomorrow.variants = amanhã
+yesterday.variants = ontem
+local_time.variants = loca, fuso horário local, fuso horário
+current_time.variants = tempo, agora
+
+[iecprefixes]
+yobi.prefix = iobi
+mebi.prefix = mebi, mibi
+
+[length]
+meter.variants = metro,metros
+inch.variants = polegada,polegadas
+mile.variants = milha,milhas
+foot.variants = pé,pés
+foot.format = pé
+yard.variants = jarda,jardas,jd,jd.
+yard.format = jd
+point.variants = ponto,pontos
+league.variants = légua,léguas
+league.format = légua
+furlong.format = furlongs
+nautical_mile.variants = milha náutica,milhas náuticas,mi. nau.
+nautical_mile.format = mi. nau.
+chain.variants = corrente,correntes
+chain.format = correntes
+
+[operations]
+assignment.variants = igual, iguais, é, são
+conversion.variants = em,no,nos,na,nas,como,para
+plus.variants = com,mais,e
+minus.variants = menos,sem,subtrair
+multiply.variants = vezes,multiplicado por,multiplicados por,multiplicada por,multiplicadas por,multiplica,multiplicam
+divide.variants = dividem,divide por,dividem por,dividido por,divididos por,dividida por,divididas por
+sum.variants = soma
+avg.variants = média,méd
+sqrt.variants = raíz quadrada
+cbrt.variants = raíz cúbica
+
+[percent]
+percent.variants = por cento,por centos
+percent_of.variants = de,do,dos,da,das
+percent_off.variants = por desconto
+percent_on.variants = por aumento
+as_a_percent_of.variants = como um % de,como uma percentagem de,como uma porcentagem de
+as_a_percent_off.variants = como um desconto de %,como uma percentagem de desconto de,como uma porcentagem de desconto de
+as_a_percent_on.variants = como um aumento de %,como uma percentagem de aumento de,como uma percentagem de desconto de
+percent_of_what_is.variants = do que custa,do que custam,de que são,de que é
+percent_off_what_is.variants = de desconto sobre o que custa,de desconto sobre o que custam
+percent_on_what_is.variants = sobre aquilo que custa,sobre aquilo que custam,sobre aquilo que são,sobre aquilo que é
+
+[siprefixes]
+exa.prefix = hexa
+kilo.prefix = quilo
+zepto.prefix = zeto
+zetta.prefix = zeta
+atto.prefix = ato
+milli.prefix = mili
+yotta.prefix = iota
+yocto.prefix = iocto
+hecto.prefix = ecto
+
+[scales]
+thousand.variants = mil,Mil,milhares,Milhares,mil.
+million.variants = milhão,Milhão,milhões,Milhões,milh.
+billion.variants = bilhão,Bilhão,bilhões,Bilhões,mil milhão,Mil milhão,milhares milhão,milhares milhões,Milhares milhão
+
+[temperature]
+celsius.variants = ºC
+celsius.format = ºC
+fahrenheit.variants = Fahrenheit,Fahrenheits,ºF
+fahrenheit.format = ºF
+kelvin.variants = Kelvin,Kelvins
+
+[time]
+second.variants = seg,segundo,segundos
+minute.variants = minuto,minutos
+hour.variants = hora,horas
+day.variants = dia,dias
+day.format = dia
+week.variants = semana,semanas
+week.format = semana
+month.variants = mês,meses
+month.format = meses
+year.variants = ano,anos
+year.format = ano, anos
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,cúbico %@,cbc%@
+litre.variants = litro,litros
+litre.symbol = L
+cup.variants = xícara,xícaras,chávena,chávenas
+cup.format = chávena
+tablespoon.variants = colher de sopa,colheres de sopa
+tablespoon.format = col. de sopa
+teaspoon.variants = colher de chá,colheres de chá
+quart.variants = quarto,quartos,qrto.,qrto
+quart.format = qrto.
+pint.variants = pinta,pta,pintas,pta.
+pint.format = pta
+gallon.variants = galão,galões
+cbinch.variants = polegada cúbica,polegadas cúbicas,plg cb.
+cbcm.variants = centímetro cúbico,centímetros cúbicos
+
+[weight]
+gram.variants = grama,gramas
+tonne.variants = tonelada,tonelada métrica
+tonne.format = t, ton.
+tonne.symbol = t, ton.
+stone.variants = pedra,pedras,pd
+stone.format = pd
+carat.variants = quilate,quilates
+pound.variants = libra,libras
+centner.variants = quintais
+centner.format = quintais
+ounce.variants = onça,onças

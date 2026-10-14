@@ -1,0 +1,12 @@
+# sv phrase tables, same format as data/en. English is always merged in.
+[currency]
+BYN.format = %@ BYR
+BYN.variants = Vitryska rubel,Vitryska rubler,vitrysk rubel,vitryska rubler
+AFN.variants = Afghani, Afganska afghani,AFS,؋,Af
+ALL.variants = Lek,Albanska Lek,Albanska Lek
+ALL.format = %@ Lek
+AMD.variants = Armenska Dram,Dram,Dram,Armenska Dram,Դ
+AMD.format = %@ Amd
+GBP.variants = Pund,Pund,£,￡,brittiska pund,brittiska pund
+NOK.variants = Norsk krona,Norska kronor
+USD.variants = USA dollar,USA dollar,dollar,USD,dollar,U.S. Dollar,U.S. Dollar,USA Dollar,USA Dollar,$

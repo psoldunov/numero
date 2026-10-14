@@ -21,9 +21,22 @@ numero-rates = { path = "crates/numero-rates" }
 gpui = { package = "gpui-kit", version = "=0.7.1" }
 gpui-component = "=0.7.1"
 
+# The app's window blur, the same as concierge's: the raw window and display
+# handles GPUI hands out, and on Linux a second handle on GPUI's Wayland
+# display that speaks ext-background-effect-v1 (in `staging`); on macOS the
+# NSWindow, and whether the user asked to reduce transparency.
+raw-window-handle = "0.6.2"
+wayland-backend = { version = "0.3.17", features = ["client_system", "dlopen"] }
+wayland-client = "0.31.15"
+wayland-protocols = { version = "0.32.13", features = ["client", "staging"] }
+objc2 = "0.6.4"
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std"] }
+
 # Dates, times and time zones for `today`, `now`, `PST time`, `time in Berlin`.
 chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
 chrono-tz = "0.10"
+# Decimal arithmetic for the engine, so `0.1 + 0.2` is exactly `0.3`.
+rust_decimal = { version = "1.43", default-features = false, features = ["std"] }
 # Currency and crypto rates, fetched in the background and cached on disk.
 ureq = { version = "3.4.2", default-features = false, features = ["rustls", "json"] }
 serde = { version = "1.0.229", features = ["derive"] }
@@ -32,6 +45,8 @@ dirs = "6.0.0"
 thiserror = "2.0.21"
 tracing = { version = "0.1.44", default-features = false, features = ["std"] }
 tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std"] }
+# Tests that write files, such as the app's document store.
+tempfile = "3.27.0"
 
 [profile.release]
 overflow-checks = true

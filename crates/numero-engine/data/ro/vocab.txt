@@ -1,0 +1,121 @@
+# ro phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radiani
+degree.variants = grad,grade,grad sexagesimal,grade sexagesimale
+
+[area]
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,%@ la pătrat,pătrat din %@,pătratul lui %@
+area.format = %@², supr. %@
+acre.variants = acru,acri
+acre.format = acru
+hectare.variants = hectar
+are.variants = ar,arie,arii
+
+[css]
+pixel.variants = pixeli
+
+[data]
+bit.variants = biți
+byte.variants = bait,baiți,octet,octeți
+byte.format = B,O
+byte.symbol = B,O
+
+[dates]
+today.variants = astăzi
+tomorrow.variants = mâine
+yesterday.variants = ieri
+
+[iecprefixes]
+exbi.prefix = Exbi
+
+[length]
+meter.variants = metru,metrii
+inch.variants = țoli,țol,inchi,'
+inch.format = '
+mile.variants = milă
+foot.variants = picior,picioare
+yard.variants = iard,irazi
+point.variants = punct,puncte
+cable.variants = câblă,cîblă,vadră
+cable.format = câble,cîble,vedre
+league.variants = leghe
+league.format = lea
+furlong.format = fr
+nautical_mile.variants = mn,milă nautică,mile nautice,mn.
+nautical_mile.format = mn.
+chain.variants = lanț,lanțuri
+chain.format = ch
+
+[operations]
+assignment.variants = egal,e,este
+conversion.variants = în,intro,intrun,ca,la
+plus.variants = cu,adăugat,adunat,și
+minus.variants = fără,substras,scăzut
+multiply.variants = ori,înmulțit cu,înmulțit la,multiplicat cu,multiplicat la,mări,mărit
+divide.variants = divizat,divizat la,divizat cu,împărțit,împărțit la,împărțit cu
+sum.variants = sumă
+avg.variants = mediu,med
+prev.variants = ant
+sqrt.variants = rădăcina pătrată,rădăcina,radical,radical de ordin 2
+cbrt.variants = rădăcina cubică,rădăcină cub,radical de ordin 3
+
+[percent]
+percent.variants = procent,procente,pct.pc,pc.
+percent_of.variants = din
+percent_off.variants = din
+percent_on.variants = pe,la
+as_a_percent_of.variants = ca % din,ca procent din,ca și procent din,ca și % din
+as_a_percent_off.variants = ca % din,ca procent din,ca și procent din,ca și % din,ca % scădere din,ca și % scădere din,ca procent scădere din
+as_a_percent_on.variants = ca și % la,ca și procent la,ca % la,ca procent la,ca % creștere din,ca procent creștere din
+percent_of_what_is.variants = de cât este
+percent_off_what_is.variants = din cât este
+percent_on_what_is.variants = pe cât este
+
+[siprefixes]
+femto.prefix = femoto
+micro.prefix = microni
+micro.symbol = μ,u
+milli.prefix = mil
+
+[scales]
+thousand.variants = mie,Mie,mii,Mii,miile,Miile,miilor,Miilor
+million.variants = milion,Milion,milioane,Milioane,m,mil,Mil
+billion.variants = miliard,Miliard,miliarde,Miliarde,mld,Mld
+
+[temperature]
+kelvin.variants = kelvini
+
+[time]
+second.variants = secunda,secunde
+minute.variants = minut
+hour.variants = oră,ore
+day.variants = zi,zile,z
+day.format = zi
+week.variants = săptămână,s,săptămâni
+week.format = s
+month.variants = lună,luni
+month.format = lun.
+year.variants = an,ani
+year.format = an
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,volumul %@,volum %@,cub %@
+litre.variants = litru,litrii
+cup.variants = cupă,cupe
+cup.format = cupă
+tablespoon.variants = măsură lingură,măsuri linguri
+teaspoon.variants = măsură lingură de ceai,măsuri linguri de ceai,lingură de ceai,linguri de ceai
+quart.variants = sfert,sferturi
+quart.format = ¼
+pint.variants = pintă,pinte
+gallon.variants = galon,galoane
+cbinch.variants = inci cubi
+
+[weight]
+gram.variants = grame,dram,gr
+tonne.variants = tonă,tone,tonă-kilometru
+carat.variants = carate
+pound.variants = livră,livre,pounzi
+centner.variants = chintal,chintale
+centner.format = q.
+ounce.variants = uncie,uncii

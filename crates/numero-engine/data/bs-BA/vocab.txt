@@ -1,0 +1,27 @@
+# bs-BA phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radijan,radijani,radijana,radijanima,rad
+degree.variants = stepen,°,stepena,stepeni,stepenima
+
+[area]
+ping.variants = ping,píng,pings,píngs,pingovi,píngovi,pingova,píngova,pingove,píngove,pingovima,píngovima
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,%@2,kvadratni %@,%@ na kvadrat
+acre.variants = acre,acres,aker,akeri,akera,akerima
+hectare.variants = hektar,hektari,hektara,hektarima,ha
+are.variants = a,ar,ara,ari,arima
+
+[css]
+pixel.variants = pixel,pixeli,pixela,pixselima,piksel,pikseli,piksela,pikselima,px,px.,pks
+em.variants = em,emovi,emova,emovima
+
+[data]
+bit.variants = bit,bitovi,bitova,bitovima,b
+byte.variants = bajt,bajtovi,bajtova,bajtovima,byte,bytes,B
+
+[length]
+mile.variants = milja,milje,miljima,mi,mi.
+foot.variants = foot,ft,ft.,feet,feets,foots,stopa,stope,stopi,stopama
+yard.variants = yard,yards,yd,yd.,jard,jardi,jarda,jarde,jardima
+
+[operations]
+assignment.variants = jednako,je,jest,iznosi

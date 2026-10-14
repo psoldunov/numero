@@ -1,0 +1,131 @@
+# de-CH phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = Radian,Radians,Radiant,Radianten
+degree.variants = grad,grade,Grad,Grade,bogengrad,bogengrade,Bogengrad,Bogengrade,º
+
+[area]
+ping.format = ping
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,wurzel %@,wurzel aus %@,quadratwurzel aus %@
+acre.variants = Acre,Acres
+acre.format = Acre
+hectare.variants = hektar,hektars,hektares,hektare,hektaren,Hektar,Hektars,Hektares,Hektare,Hektaren
+are.variants = Ar,Are,Aren,Ares,ar,aren
+
+[css]
+pixel.variants = Pixel
+em.variants = Em
+em.format = Em
+
+[dates]
+today.variants = heute
+tomorrow.variants = morgen
+yesterday.variants = gestern
+local_time.variants = lokale Zeitzone, Zeitzone
+current_time.variants = Zeit, jetzt
+
+[iecprefixes]
+mebi.prefix = mibi
+
+[length]
+meter.variants = Meter
+inch.variants = Inch,Inches,zoll,zolls,zolles,zölles,Zoll,Zolls,Zolles,Zölle,”,'
+mile.variants = Mile,meile,meilen,Meile,Meilen,Mi.,Mi
+mile.format = Mi.
+foot.variants = Foot,Feet,fuß,füße,fuss,füsse,Fuß,Füße,Fuss,Füsse,fb,fb. Ft,Ft.,Fb,Fb.
+yard.variants = Yard,Yards,Yd,Yd.
+yard.format = Yd
+point.variants = Punkt,Punkte
+cable.variants = Cable,Cables
+cable.format = Cable
+league.variants = League,Leagues,legue,leguen,Legue,Leugen
+league.format = Leuge
+furlong.variants = Furlong,furchenläge,furchenlängen,Furchenlänge,Furchenlängen,fur.,fur
+furlong.format = fur
+nautical_mile.variants = nautische Meile,nautischer Meile,nautische Meilen,Nautische Meile,Nautische Meilen
+chain.variants = Chain,Chains,kettenlänge,kettenlägen,Kettenlänge,Kettenlängen,kette,ketten,Kette,Ketten,ch
+chain.format = ch
+
+[operations]
+assignment.variants = ist gleich, sind gleich, es ist gleich, sie sind gleich, ist, sind
+conversion.variants = nach,zu,als
+plus.variants = und,mit
+minus.variants = weniger,abzüglich,ohne
+multiply.variants = mal,multipliziert mit
+divide.variants = geteilt durch,durch,geteilt
+sum.variants = summe,ingesamt,gesamt,ergebnis
+avg.variants = Mittel,Durchschnitt,Ø
+prev.variants = vorheriges
+sqrt.variants = Quadratwurzel,Quadrat Wurzel
+cbrt.variants = Kubikwurzel,Kubik Wurzel
+
+[percent]
+percent.variants = Perzent,Perzente,Prozent,Prozente,Proz,Proz.,Prz.,Prz
+percent_of.variants = von
+percent_off.variants = abgezogen von
+percent_on.variants = zusätzlich zu
+as_a_percent_of.variants = in Prozent von,in % von
+as_a_percent_off.variants = in Prozent abzüglich,in % abzüglich
+as_a_percent_on.variants = in Prozent zuzüglich,in % zuzüglich
+percent_of_what_is.variants = von was sind,von was ergeben,wovon sind,wovon ergeben
+percent_off_what_is.variants = was ergibt ist
+percent_on_what_is.variants = auf was ist
+
+[siprefixes]
+micro.prefix = mikro
+deci.prefix = dezi
+centi.prefix = zenti
+deca.prefix = deka
+
+[scales]
+thousand.variants = Tausend,tausend
+million.variants = millionen,Millionen,m
+billion.variants = Milliarde,Milliarden,milliarde,milliarden
+
+[temperature]
+celsius.variants = Celsius
+fahrenheit.variants = Fahrenheit,Fah,Fah.,Fahr,Fahr.
+kelvin.variants = Kelvin
+
+[time]
+second.variants = sek,sekunde,sekunden,Sec,Sek,Sekunde,Skeunden
+minute.variants = min.,Min,Min.,minuten,Minute,Minuten
+hour.variants = stunde,stunden,Stunde,Stunden,Std,Std.
+day.variants = Tag,Tage,T,Tg
+day.format = Tg
+week.variants = Woche,Wochen,W,wo,Wo,wo.,Wo.,wch,wch.,Wch,Wch.
+week.format = W
+month.variants = Monat,Monate,Mon,Mon.
+month.format = Mon.
+year.variants = jahr,jahre,Jahr,Jahre,j,J
+year.format = Jahr(e)
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,kubik %@,kubik%@
+litre.variants = Liter
+litre.symbol = L
+cup.variants = Cup,Cups,Schale,Schalen,Häferl,Haferl,Tasse,Tassen
+cup.format = Cup
+tablespoon.variants = löffel,Löffel
+tablespoon.format = Löffel
+teaspoon.variants = Teelöffel,teelöffel
+teaspoon.format = Teelöffel.
+quart.variants = viertel,Viertel,Viertele,quartier,Quartier,Quartiere,quarten,Quart,Quarten,vier.,viert.,viert
+quart.format = Qt.
+pint.variants = Pint,Pints,Pinte,Pinten
+pint.format = pt.
+gallon.variants = gallone,gallonen,Gallon,Gallons,Gallone,Gallonen,Gal.,Gal
+cbinch.variants = Kubikzoll,Kubikzölle,kubikzoll,kubikzölle,cuin,Cuin,ci,Kbz,Kbz.,kbz,kbz.
+cbcm.variants = Kubikzentimeter,kubikzentimeter,Kz,kz,Kz.,kz.
+
+[weight]
+gram.variants = gramm,gramms,grammen,Gramm,Gramms,Grammen
+tonne.variants = tonnen,Tonne,Tonnes,Tonnen,metrische Tonne,metrische Tonnen
+stone.variants = Stone,Stones,Stonen,Stein,Steiner
+stone.format = St
+carat.variants = karat,karate,Karat,Karate,metrisches Karat,metrische Karate,kt,Kt
+carat.format = Kt
+pound.variants = pfund,pfunde,Pfund,Pfunde,Pound,Pounds
+pound.format = Pfd
+centner.variants = zentner,Zentner,zen,zen.,zent.,zent,Quintal,quintale,Quintale,q
+centner.format = Ztr.
+ounce.variants = unze,unzen,Ounce,Ounces,Unze,Unzen,oz.,uz,uz.,Uz,Uz.

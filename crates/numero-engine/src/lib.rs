@@ -5,6 +5,37 @@
 //! The public surface below is the contract the GPUI app is built against.
 //! Extend it freely; do not break it without updating `numero-app` and
 //! `numero-cli` in the same change.
+//!
+//! Behaviour follows the reverse-engineered Numi spec in
+//! `docs/numi-spec.md`; section numbers in the module docs point into it.
+//!
+//! Pipeline per line: `lexer` (tokens and phrases from the locale's
+//! vocabulary trie) → `parser` (meaning resolution, free text dropped,
+//! Pratt parse with Numi's priorities) → `eval` (decimal arithmetic,
+//! units, currencies, dates) → `value` display. `doc` carries variables,
+//! `prev`, `sum` blocks and the grand total across lines; `ext` holds the
+//! extension hooks a scripting layer drives.
+
+mod dates;
+mod doc;
+mod engine;
+mod eval;
+mod ext;
+mod format;
+mod functions;
+mod lexer;
+mod locales;
+mod num;
+mod parser;
+mod trie;
+mod units;
+mod value;
+mod vocab;
+mod vocab_ext;
+mod zones;
+
+pub use engine::{Engine, Evaluation};
+pub use ext::{ExtensionError, FunctionSpec, ScriptFunction, ScriptValue, UnitSpec};
 
 use std::collections::HashMap;
 use std::ops::Range;
@@ -52,6 +83,16 @@ pub struct Rates {
 pub struct EvalContext {
     pub now: DateTime<Utc>,
     pub local_tz: chrono_tz::Tz,
+}
+
+impl EvalContext {
+    /// The system clock and local zone.
+    pub fn system() -> Self {
+        Self {
+            now: Utc::now(),
+            local_tz: local_timezone(),
+        }
+    }
 }
 
 /// What a line of the document turned out to be.
@@ -104,99 +145,6 @@ pub struct LineResult {
     pub spans: Vec<Span>,
 }
 
-impl LineResult {
-    fn empty() -> Self {
-        Self {
-            kind: LineKind::Empty,
-            display: None,
-            number: None,
-            spans: Vec::new(),
-        }
-    }
-}
-
-/// The engine: unit tables, rates and settings. Cheap to share; evaluation
-/// does not mutate it.
-#[derive(Debug, Clone, Default)]
-pub struct Engine {
-    config: Config,
-    rates: Rates,
-}
-
-impl Engine {
-    pub fn new(config: Config) -> Self {
-        Self {
-            config,
-            rates: Rates::default(),
-        }
-    }
-
-    pub fn config(&self) -> &Config {
-        &self.config
-    }
-
-    pub fn set_config(&mut self, config: Config) {
-        self.config = config;
-    }
-
-    pub fn set_rates(&mut self, rates: Rates) {
-        self.rates = rates;
-    }
-
-    pub fn rates(&self) -> &Rates {
-        &self.rates
-    }
-
-    /// Evaluate a whole document against the system clock and local zone.
-    /// Returns exactly one result per `\n`-separated line.
-    pub fn evaluate(&self, document: &str) -> Vec<LineResult> {
-        let ctx = EvalContext {
-            now: Utc::now(),
-            local_tz: local_timezone(),
-        };
-        self.evaluate_with(document, &ctx)
-    }
-
-    /// Evaluate a whole document against an explicit clock and zone.
-    pub fn evaluate_with(&self, document: &str, _ctx: &EvalContext) -> Vec<LineResult> {
-        // Placeholder until the real evaluator lands: plain numbers only.
-        document
-            .split('\n')
-            .map(|line| {
-                let trimmed = line.trim();
-                if trimmed.is_empty() {
-                    LineResult::empty()
-                } else if let Some(rest) = trimmed.strip_prefix('#') {
-                    let _ = rest;
-                    LineResult {
-                        kind: LineKind::Header,
-                        spans: vec![Span {
-                            range: 0..line.len(),
-                            class: TokenClass::Header,
-                        }],
-                        ..LineResult::empty()
-                    }
-                } else if let Ok(n) = trimmed.parse::<f64>() {
-                    LineResult {
-                        kind: LineKind::Value,
-                        display: Some(n.to_string()),
-                        number: Some(n),
-                        spans: vec![Span {
-                            range: 0..line.len(),
-                            class: TokenClass::Number,
-                        }],
-                    }
-                } else {
-                    LineResult {
-                        kind: LineKind::Comment,
-                        ..LineResult::empty()
-                    }
-                }
-            })
-            .collect()
-    }
-}
-
 /// The system's IANA zone, or UTC when it cannot be read.
 pub fn local_timezone() -> chrono_tz::Tz {
     std::env::var("TZ")
@@ -205,7 +153,9 @@ pub fn local_timezone() -> chrono_tz::Tz {
         .or_else(|| {
             std::fs::read_link("/etc/localtime").ok().and_then(|path| {
                 let path = path.to_string_lossy().into_owned();
-                path.split("zoneinfo/").nth(1).and_then(|name| name.parse().ok())
+                path.split("zoneinfo/")
+                    .nth(1)
+                    .and_then(|name| name.parse().ok())
             })
         })
         .unwrap_or(chrono_tz::UTC)

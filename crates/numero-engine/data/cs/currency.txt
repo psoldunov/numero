@@ -1,0 +1,6 @@
+# cs phrase tables, same format as data/en. English is always merged in.
+[currency]
+AED.variants = Dirham,UAE Dirham,Dirhamy,UAE Dirhamy,Dirhamů,UAE Dirhamů,AED,Dhs,د.إ
+AFN.variants = Afghánský afghání,Afghání,AFN,Afs,؋,Af
+AFN.format = %@ AFN
+CZK.variants = Korun, Korun českých, českých korun, Koruna, Koruny, Kč, CZK

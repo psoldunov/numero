@@ -13,7 +13,38 @@ name = "numero-app"
 path = "src/main.rs"
 
 [dependencies]
+chrono.workspace = true
+dirs.workspace = true
+gpui.workspace = true
+gpui-component.workspace = true
 numero-engine.workspace = true
+numero-rates.workspace = true
+raw-window-handle.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# The blur behind the window, through ext-background-effect-v1.
+wayland-backend.workspace = true
+wayland-client.workspace = true
+wayland-protocols.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# The blur behind the window, through the window server.
+objc2.workspace = true
+objc2-app-kit = { workspace = true, features = [
+  "NSAccessibility",
+  "NSResponder",
+  "NSView",
+  "NSWindow",
+  "NSWorkspace",
+] }
+
+[dev-dependencies]
+gpui = { workspace = true, features = ["test-support"] }
+tempfile.workspace = true
 
 [lints]
 workspace = true

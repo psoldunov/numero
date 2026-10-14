@@ -1,0 +1,1 @@
+# ja phrase tables, same format as data/en. English is always merged in.

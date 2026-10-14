@@ -1,0 +1,4 @@
+# he phrase tables, same format as data/en. English is always merged in.
+[currency]
+ILS.variants = שקל, שקלים, ש\"ח, שקל חדש, שקל ישראלי חדש, שקלים ישראלים חדשים, שקלים חדשים, שקלים ישראלים, שקלים
+ILS.format = %@ ש\"ח

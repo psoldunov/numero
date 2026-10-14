@@ -1,0 +1,77 @@
+# Phrases Numero accepts beyond Numi's own tables: function and constant
+# names, operators Numi documents but does not localize, crypto currencies
+# beyond Bitcoin, and a few common aliases. Same `key = a,b,c` format.
+
+[functions]
+fn.sqrt.variants = sqrt,square root
+fn.cbrt.variants = cbrt,cubic root,cube root,cubed root
+fn.root.variants = root
+fn.abs.variants = abs
+fn.log.variants = log
+fn.ln.variants = ln
+fn.fact.variants = fact,factorial
+fn.round.variants = round
+fn.ceil.variants = ceil
+fn.floor.variants = floor
+fn.sin.variants = sin
+fn.cos.variants = cos
+fn.tan.variants = tan
+fn.asin.variants = arcsin,asin
+fn.acos.variants = arccos,acos
+fn.atan.variants = arctan,atan
+fn.sinh.variants = sinh
+fn.cosh.variants = cosh
+fn.tanh.variants = tanh
+fn.fromunix.variants = fromunix,unixtime
+
+[constants]
+const.pi.variants = pi,π
+const.e.variants = e
+
+[operators]
+mod.variants = mod
+xor.variants = xor
+
+[crypto]
+ETH.variants = Ethereum,Ether
+ETH.format = %@ ETH
+USDT.variants = Tether
+USDT.format = %@ USDT
+BNB.variants = Binance Coin
+BNB.format = %@ BNB
+SOL.variants = Solana
+SOL.format = %@ SOL
+XRP.variants = Ripple
+XRP.format = %@ XRP
+USDC.variants = USD Coin
+USDC.format = %@ USDC
+ADA.variants = Cardano
+ADA.format = %@ ADA
+DOGE.variants = Dogecoin
+DOGE.format = %@ DOGE
+TRX.variants = Tron
+TRX.format = %@ TRX
+TON.variants = Toncoin
+TON.format = %@ TON
+AVAX.variants = Avalanche
+AVAX.format = %@ AVAX
+SHIB.variants = Shiba Inu
+SHIB.format = %@ SHIB
+DOT.variants = Polkadot
+DOT.format = %@ DOT
+LINK.variants = Chainlink
+LINK.format = %@ LINK
+BCH.variants = Bitcoin Cash
+BCH.format = %@ BCH
+LTC.variants = Litecoin
+LTC.format = %@ LTC
+NEAR.variants = NEAR
+NEAR.format = %@ NEAR
+UNI.variants = Uniswap
+UNI.format = %@ UNI
+XLM.variants = Stellar,Lumens
+XLM.format = %@ XLM
+XMR.variants = Monero
+XMR.format = %@ XMR
+ETC.variants = Ethereum Classic
+ETC.format = %@ ETC

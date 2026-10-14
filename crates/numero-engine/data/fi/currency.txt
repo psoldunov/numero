@@ -1,0 +1,33 @@
+# fi phrase tables, same format as data/en. English is always merged in.
+[currency]
+BYN.variants = Valko-Venäjän rupla,Valko-Venäjän ruplaa
+AED.variants = Yhdistyneiden arabiemiirikuntien dirhami,Yhdistyneiden arabiemiirikuntien dirhamia,Arabiemiirikuntien dirhami,Arabiemiirikuntien dirhamia,د.إ
+AFN.variants = afgaani,afgaania,Afganistanin afgaani,Afganistanin afgaania,؋,Af,Afs
+AFN.format = %@ AFN
+ALL.variants = lek,lekiä,Albanian lek,Albanian Lekiä
+ALL.format = %@ ALL
+AMD.variants = Armenian dram,Armenian dramia,dram,dramia,Դ
+AMD.format = %@ AMD
+ANG.variants = Alankomaiden Antillien guldeni,Alankomaiden Antillien guldenia,NAƒ,NAf,ƒ
+ANG.format = %@ ANG
+AOA.variants = Angolan kwanza,Angolan kwanzaa,kwanza,kwanzaa,Kz
+AOA.format = %@ AOA
+ARS.variants = Argentiinan peso,Argentiinan pesoa
+AUD.variants = Australian dollari,Australian dollaria
+AWG.variants = Aruban floriini,Aruban floriinia
+AWG.format = %@ AWG
+AZN.variants = Azerbaidžanin manat,Azerbaidžanin manatia
+AZN.format = %@ AZN
+BAM.variants = Bosnian markka,Bosnian markkaa,Bosnian ja Hertsegovinan vaihdettava markka,Bosnian ja Hertsegovinan vaihdettavaa markkaa
+BAM.format = %@ BAM
+BBD.variants = Barbadoksen dollari,Barbadoksen dollaria
+BDT.variants = Bangladeshin taka,Bangladeshin takaa,taka,takaa,৳
+BDT.format = %@ BDT
+BGN.variants = Bulgarian leva,Bulgarian levaa,leva,levaa,лв
+BGN.format = %@ BGN
+BHD.variants = Bahrainin dinaari,Bahrainin dinaaria,.د.ب
+BHD.format = %@ BHD
+BIF.variants = Burundin frangi,Burundin frangia,FBu,BIF
+BIF.format = %@ BIF
+BMD.variants = Bermudan dollari,Bermudan dollaria,BMD
+BND.variants = Brunein dollari,Brunein dollaria,BND,B$

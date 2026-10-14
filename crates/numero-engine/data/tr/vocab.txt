@@ -1,0 +1,64 @@
+# tr phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radyan,rad,radyan
+degree.variants = derece,°,derece,arcdegree
+
+[area]
+acre.variants = dönüm,dönüm
+acre.format = dönüm
+hectare.variants = hektar,hektar,hk
+hectare.format = hk
+
+[css]
+pixel.variants = piksel,piksel,px,px.
+em.variants = em,em
+
+[data]
+bit.variants = bit,bit,b
+byte.variants = bayt,bayt,B
+
+[dates]
+today.variants = bugün
+tomorrow.variants = yarın
+yesterday.variants = dün
+local_time.variants = yerel,yerel saat dilimi,yerel saat dilimi
+current_time.variants = zaman,şu an
+
+[length]
+meter.variants = metre,metre,metre,metre,m
+inch.variants = inç,inç,″
+mile.variants = mil,mil,mi,mi.
+foot.variants = adım,adım,ft,ft.,adım,adım
+
+[operations]
+assignment.variants = eşittir
+sum.variants = sum,total,toplam
+prev.variants = prev,önceki
+
+[siprefixes]
+micro.prefix = mikro
+centi.prefix = santi
+hecto.symbol = s
+
+[temperature]
+celsius.variants = santigrat,C,°C
+fahrenheit.variants = fahrenhayt,fahrenhayt,F,°F
+kelvin.variants = kelvin,kelvin,K
+
+[time]
+second.variants = s,sn,saniye,saniye
+minute.variants = dk,dakika,dakika
+minute.format = dk
+hour.variants = s,sa,saat,saat
+hour.format = s
+day.variants = gün,gün,g
+day.format = gün
+week.variants = hafta,h,hafta
+week.format = h
+month.variants = ay,ay,ay,ay,ay.
+month.format = ay.
+year.variants = y,yl,yıl,yıl
+year.format = yl
+
+[volume]
+litre.variants = litre,litre,litre,litre,l,L

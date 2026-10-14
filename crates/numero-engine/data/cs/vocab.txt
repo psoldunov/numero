@@ -1,0 +1,45 @@
+# cs phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radián,rad,radiánů,radiány
+degree.variants = stupeň,stupňů,stupně
+
+[area]
+ping.variants = ping,píng,pingů,píngů,pingy,píngy
+ping.format = ping,píng
+acre.variants = akr,akry,akrů
+acre.format = akr
+hectare.variants = hektar,hektary,hektarů,ha
+are.variants = ar,arů,ary
+
+[css]
+pixel.variants = pixel,pixelů,pixely,px,px.
+
+[operations]
+assignment.variants = rovná se,je
+
+[temperature]
+celsius.variants = Celsia,%@ Celsia,C,°C
+fahrenheit.variants = Fahrenheit,%@ Fahrenheit,F,°F
+kelvin.variants = Kelvin, Kelvinů, Kelviny,%@ Celsia,%@ Kelvina,K
+
+[time]
+second.variants = s,sek,sekund,sekunda,sekundy
+minute.variants = min,minut,minuta,minuty
+hour.variants = h,hod,hodina,hodiny,hodin
+week.variants = týden,týdnů,týdne,týdny
+week.format = týd.
+month.variants = měsíc,měsíců,měsíce,
+month.format = měs.
+year.variants = rok,let,roků,roky,léta,
+year.format = roku
+
+[weight]
+gram.variants = gram,gramy,gramů,g
+tonne.variants = tuna,tuny,tun,t
+stone.variants = stone,stony,stonů,st
+carat.variants = karát,karátů,karáty,ct,kt
+carat.format = kt
+pound.variants = Libra,Liber,Libry,lb
+centner.variants = centnéř,centnéřů,centnéře
+centner.format = centnéř
+ounce.variants = unce,uncí,oz

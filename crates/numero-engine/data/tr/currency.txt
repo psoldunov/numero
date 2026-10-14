@@ -1,0 +1,14 @@
+# tr phrase tables, same format as data/en. English is always merged in.
+[currency]
+AFN.variants = Afgani,Afgan Afgani,Afs,؋,Af,Afgan Afganisi
+AUD.variants = Avustralya Doları,Avustralya Doları
+BBD.variants = Barbados Doları,Barbados Doları
+EUR.variants = Euro,€,Avro
+INR.variants = Indian Rupee,Hindistan Rupisi
+LKR.variants = Sri Lanka Rupee,Sri Lanka Rupisi
+QAR.variants = Qatari Rial,Qatari Rials,Katar Riyali
+QAR.format = %@ QAR
+SGD.variants = Singapore Dollar,Singapore Dollars,S$,Singapur Doları
+THB.variants = Thai Baht,Baht,฿,Tayland Bahtı
+THB.format = THB %@
+TRY.variants = Türk Lirası,₺

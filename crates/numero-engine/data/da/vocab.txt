@@ -1,0 +1,34 @@
+# da phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radian,rad,radianer
+degree.variants = degree,°,degrees,arcdegree,grader
+
+[area]
+ping.variants = ping
+ping.format = ping
+acre.variants = hektar
+acre.format = hektar
+hectare.variants = hektar,ha
+are.variants = ar
+
+[css]
+pixel.variants = pixel,pixels,px
+
+[length]
+point.variants = point,points,pt,pt.,point.points.pt.pt.
+
+[operations]
+assignment.variants = er lig,giver
+
+[time]
+hour.variants = h,hr,hour,hours,t,time,timer
+month.variants = month,monthes,måned,måneder
+
+[volume]
+tablespoon.variants = tablespoon,tablespoons,table spoon,table spoons,tbsp.,tbsp,T.,T.teske,teskeer,tsk
+teaspoon.variants = teaspoon,teaspoons,tea spoon,tea spoons,t.,tsp.,tsp,teske,teskeer,tsk
+cbinch.variants = c.i.,CI,cui,cu inch,c.i.CI
+
+[weight]
+centner.variants = centner,quintal,centners,quintals,hkg
+ounce.variants = ounce,ounces,oz,unse

@@ -1,0 +1,117 @@
+# es phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radián,rad,radianes
+degree.variants = grado,°,grados,grado de arco
+degree.format = º
+
+[area]
+ping.format = ping
+hectare.variants = hectárea,hectáreas,ha
+are.variants = a,área,áreas,area,areas
+
+[css]
+pixel.variants = píxel,píxeles,px,px.
+
+[dates]
+today.variants = hoy
+tomorrow.variants = mañana
+yesterday.variants = ayer
+local_time.variants = hora local, zona horaria local
+current_time.variants = hora,ahora
+
+[length]
+meter.variants = metro,metros,m
+inch.variants = pulgadas,pulgada,\"
+mile.variants = milla,millas,mi,mi.
+foot.variants = pie,pies,ft,ft.
+yard.variants = yarda,yardas,yd,yd.
+point.variants = punto,puntos,pt.pt.
+league.variants = legua,leguas
+league.format = legua
+furlong.variants = estadio,estadios
+furlong.format = estadio
+nautical_mile.variants = milla nautica,millas nauticas
+chain.variants = cadena,cadenas
+chain.format = cadena
+
+[numbers]
+hex.variants = hexadecimal
+
+[operations]
+assignment.variants = igual, iguales, es igual, son iguales, es igual a, son iguales a, es, son, equivale a, equivalen a
+conversion.variants = en,dentro,como,para
+plus.variants = con,mas,y
+minus.variants = menos,sin,extraer
+multiply.variants = por,multiplicado por,multiplicar
+divide.variants = dividir,divide por,dividido por
+sum.variants = suma,total
+avg.variants = promedio,prom
+prev.variants = previo
+sqrt.variants = raíz cuadrada
+cbrt.variants = raíz cúbica
+
+[percent]
+percent.variants = %,por ciento
+percent_of.variants = de
+percent_off.variants = de
+percent_on.variants = en
+as_a_percent_of.variants = como %,como porcentaje de
+as_a_percent_off.variants = como un % de, como un porcentaje de,como una disminución del % de,como una disminución porcentual de
+as_a_percent_on.variants = como %,como porcentaje en,como % incremento de,como incremento porcentual de
+percent_of_what_is.variants = de qué es
+percent_off_what_is.variants = de qué es
+percent_on_what_is.variants = sobre lo que es
+
+[siprefixes]
+zetta.symbol = z
+milli.prefix = mili
+yotta.symbol = y
+peta.symbol = p
+
+[scales]
+thousand.variants = mil,Mil,miles,Miles
+million.variants = millón,Millón,millones,Millones
+billion.variants = billón,Billón,billones,Billones
+
+[temperature]
+celsius.variants = celsius,C,ºC
+celsius.format = ºC
+fahrenheit.variants = Fahrenheit,fahrenheits,F,ºF
+
+[time]
+second.variants = s,sec,segundo,segundos
+minute.variants = min,minuto,minutos
+hour.variants = h,hora,horas
+day.variants = día,días,d
+day.format = día
+week.variants = semana,semanas
+week.format = s
+month.variants = mes,meses
+month.format = mes
+year.variants = año,años
+year.format = año
+
+[volume]
+volume.templates = cu %@,cúbico %@,cb %@,cb%@,%@³,%@ ³,%@ 3
+litre.variants = litro,litros,l,L
+litre.symbol = L
+cup.variants = taza,tazas
+cup.format = taza
+tablespoon.variants = cucharada sopera,cucharadas soperas
+tablespoon.format = cda.
+teaspoon.variants = cucharadita de té, cucharaditas de té,cdta.,cdtas.
+teaspoon.format = cdta.
+quart.variants = cuarto,cuartos
+quart.format = cuarto
+pint.variants = pinta,pintas
+gallon.variants = galon,galones
+cbcm.variants = cc, ccm
+
+[weight]
+gram.variants = gramo,gramos,g
+tonne.variants = tonelada,toneladas
+carat.variants = quilate,quilates,ct
+pound.variants = libra,libras,lb
+centner.variants = quintal,quintales
+centner.format = centner,quintal
+ounce.variants = onza,onzas,oz
