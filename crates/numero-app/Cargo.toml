@@ -1,0 +1,19 @@
+[package]
+name = "numero-app"
+description = "Numero's GPUI app for Linux and macOS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "numero-app"
+path = "src/main.rs"
+
+[dependencies]
+numero-engine.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,47 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+authors = ["Philipp Soldunov"]
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+numero-engine = { path = "crates/numero-engine" }
+numero-rates = { path = "crates/numero-rates" }
+
+# The app on Linux and macOS. GPUI Kit pins the GPUI snapshot it was built
+# against exactly; it goes by `gpui` so GPUI's macros resolve through it.
+# Bump both together, on purpose, never with a plain `cargo update`. Same
+# pair as the concierge repository.
+gpui = { package = "gpui-kit", version = "=0.7.1" }
+gpui-component = "=0.7.1"
+
+# Dates, times and time zones for `today`, `now`, `PST time`, `time in Berlin`.
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+chrono-tz = "0.10"
+# Currency and crypto rates, fetched in the background and cached on disk.
+ureq = { version = "3.4.2", default-features = false, features = ["rustls", "json"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+dirs = "6.0.0"
+thiserror = "2.0.21"
+tracing = { version = "0.1.44", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std"] }
+
+[profile.release]
+overflow-checks = true
+
+[workspace.lints.rust]
+missing_debug_implementations = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+unwrap_used = "warn"

@@ -1,0 +1,25 @@
+#:schema https://www.ensemblr.dev/schemas/settings.schema.json
+
+# Every command enters the Nix dev shell and runs one `just` recipe.
+
+[scripts]
+setup = "nix develop -c just setup"
+
+[scripts.run.check]
+command = "nix develop -c just check"
+icon = "shield-check"
+default = true
+
+[scripts.run.test]
+command = "nix develop -c just test"
+icon = "test-tube"
+
+# The GPUI app, on Linux and on macOS.
+[scripts.run.app]
+command = "nix develop -c just app"
+icon = "monitor"
+
+# Linux only: runs `just check` on the Mac over SSH (NUMERO_MAC_HOST).
+[scripts.run.mac-check]
+command = "nix develop -c just mac-check"
+icon = "upload"
