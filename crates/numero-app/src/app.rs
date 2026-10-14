@@ -28,6 +28,7 @@ const TITLE: &str = "Numero";
 /// app id, so the installed desktop file is `dev.soldunov.numero.desktop`.
 pub(crate) const APP_ID: &str = "dev.soldunov.numero";
 /// The icon theme name the packages install the app icon under.
+#[cfg(target_os = "linux")]
 pub(crate) const ICON_NAME: &str = "numero";
 
 /// Runs the app until the user quits, unless Numero runs already: then
