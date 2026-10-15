@@ -1,0 +1,22 @@
+[package]
+name = "numero-library"
+description = "Numero's calculations on disk: one plain-text file each, in a folder that may be synced"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+dirs.workspace = true
+notify.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

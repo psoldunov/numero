@@ -1,0 +1,11 @@
+# da phrase tables, same format as data/en. English is always merged in.
+[currency]
+BYN.format = %@ BYR
+BYN.variants = Hviderussisk rubel,Hviderussiske rubler,hviderussisk rubel,hviderussiske rubler
+AED.variants = UAE-dirham
+AFN.variants = Afghani,afghani
+AFN.format = %@ AFN
+ALL.variants = Lek,lek,Albanske lek,albanske lek
+ALL.format = %@ ALL
+AMD.variants = Armenske dram,armenske dram,dram,Dram
+AMD.format = %@ dram

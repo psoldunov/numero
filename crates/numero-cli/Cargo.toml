@@ -1,0 +1,21 @@
+[package]
+name = "numero-cli"
+description = "Evaluate a Numero document in the terminal"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "numero"
+path = "src/main.rs"
+
+[dependencies]
+numero-engine.workspace = true
+numero-extensions.workspace = true
+numero-rates.workspace = true
+
+[lints]
+workspace = true

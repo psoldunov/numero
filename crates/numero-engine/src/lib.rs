@@ -1,0 +1,163 @@
+//! Numero's calculation engine: a Numi-compatible, natural-language text
+//! calculator. Pure Rust, no UI and no network; the app and the CLI feed it a
+//! document and render one [`LineResult`] per line.
+//!
+//! The public surface below is the contract the GPUI app is built against.
+//! Extend it freely; do not break it without updating `numero-app` and
+//! `numero-cli` in the same change.
+//!
+//! Behaviour follows the reverse-engineered Numi spec in
+//! `docs/numi-spec.md`; section numbers in the module docs point into it.
+//!
+//! Pipeline per line: `lexer` (tokens and phrases from the locale's
+//! vocabulary trie) → `parser` (meaning resolution, free text dropped,
+//! Pratt parse with Numi's priorities) → `eval` (decimal arithmetic,
+//! units, currencies, dates) → `value` display. `doc` carries variables,
+//! `prev`, `sum` blocks and the grand total across lines; `ext` holds the
+//! extension hooks a scripting layer drives.
+
+mod big;
+mod dates;
+mod doc;
+mod engine;
+mod eval;
+mod ext;
+mod format;
+mod functions;
+mod lexer;
+mod locales;
+mod num;
+mod parser;
+mod trie;
+mod units;
+mod value;
+mod vocab;
+mod vocab_ext;
+mod zones;
+
+pub use engine::{Engine, Evaluation};
+pub use ext::{ExtensionError, FunctionSpec, ScriptFunction, ScriptValue, UnitSpec};
+
+use std::collections::HashMap;
+use std::ops::Range;
+
+use chrono::{DateTime, Utc};
+
+/// User-facing formatting and unit settings.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Config {
+    /// Maximum fraction digits shown in a result.
+    pub precision: usize,
+    /// Separator between the integer and fraction parts of a result.
+    pub decimal_separator: char,
+    /// Separator between groups of three integer digits, if any.
+    pub grouping_separator: Option<char>,
+    /// CSS pixels per inch, for `px`/`pt` conversions (`ppi` variable).
+    pub ppi: f64,
+    /// CSS pixels per `em` (`em` variable).
+    pub em_px: f64,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            precision: 2,
+            decimal_separator: '.',
+            grouping_separator: Some(','),
+            ppi: 96.0,
+            em_px: 16.0,
+        }
+    }
+}
+
+/// Exchange rates: how many units of each currency (ISO code, or crypto
+/// ticker) one US dollar buys.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Rates {
+    pub per_usd: HashMap<String, f64>,
+    /// When the rates were fetched, if known.
+    pub fetched_at: Option<DateTime<Utc>>,
+}
+
+/// The clock and zone a document is evaluated against. Tests pin both.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EvalContext {
+    pub now: DateTime<Utc>,
+    pub local_tz: chrono_tz::Tz,
+}
+
+impl EvalContext {
+    /// The system clock and local zone.
+    pub fn system() -> Self {
+        Self {
+            now: Utc::now(),
+            local_tz: local_timezone(),
+        }
+    }
+}
+
+/// What a line of the document turned out to be.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LineKind {
+    /// Blank line. Resets `sum`/`avg` blocks.
+    Empty,
+    /// `// comment` or a line with nothing calculable in it.
+    Comment,
+    /// `# Header`. Also resets `sum`/`avg` blocks.
+    Header,
+    /// A calculated value.
+    Value,
+    /// Text that looked calculable but failed (unknown unit, bad conversion).
+    Error,
+}
+
+/// Syntax classes for highlighting a line in the editor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TokenClass {
+    Number,
+    Unit,
+    Currency,
+    Operator,
+    Keyword,
+    Function,
+    Variable,
+    Label,
+    Comment,
+    Header,
+    Text,
+}
+
+/// A highlighted byte range within one line.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Span {
+    pub range: Range<usize>,
+    pub class: TokenClass,
+}
+
+/// The outcome of one line of the document.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LineResult {
+    pub kind: LineKind,
+    /// Text for the result column, e.g. `12.7 cm`, `$ 9.00`, `14:05 CET`.
+    pub display: Option<String>,
+    /// The bare number behind `display`, for copying, if the result has one.
+    pub number: Option<f64>,
+    /// Highlight spans over the line's own bytes, in order, non-overlapping.
+    pub spans: Vec<Span>,
+}
+
+/// The system's IANA zone, or UTC when it cannot be read.
+pub fn local_timezone() -> chrono_tz::Tz {
+    std::env::var("TZ")
+        .ok()
+        .and_then(|name| name.parse().ok())
+        .or_else(|| {
+            std::fs::read_link("/etc/localtime").ok().and_then(|path| {
+                let path = path.to_string_lossy().into_owned();
+                path.split("zoneinfo/")
+                    .nth(1)
+                    .and_then(|name| name.parse().ok())
+            })
+        })
+        .unwrap_or(chrono_tz::UTC)
+}

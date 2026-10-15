@@ -1,0 +1,42 @@
+# sv phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radian,rad,radianer
+degree.variants = grad,°,grader, grader
+
+[area]
+ping.variants = pinga, ping, pingar, pings
+ping.format = ping
+area.templates = kvadrat %@,kv %@,kv%@,%@²,%@ ²,%@2
+acre.variants = tunnland,tunnlanden
+acre.format = tnl
+hectare.variants = hektar,hektar,ha
+are.variants = ar,aret,aren
+
+[css]
+pixel.variants = pixel,pixlar,px,px.
+
+[data]
+bit.variants = bit,biten,bitar
+byte.variants = byte,byten,B
+
+[dates]
+today.variants = idag
+tomorrow.variants = imorgon
+yesterday.variants = igår
+local_time.variants = lokal,lokal tidzon,lokal tidzon
+current_time.variants = tid,nu
+
+[length]
+meter.variants = meter,metern,metrar,metrarna,m
+inch.variants = tum,tum,\"
+
+[operations]
+assignment.variants = lika med, är
+
+[percent]
+percent_off.variants = av
+as_a_percent_of.variants = som % av,som procent av
+
+[scales]
+thousand.variants = tusen,Tusen,tusen,Tusen,kilo,kilo.,kilo,k
+billion.variants = miljard,Miljard,miljard,Miljarder,miljarder,Miljarder,miljarderna,Miljarderna

@@ -1,0 +1,115 @@
+# nl-BE phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radiaal,radialen,rad.
+degree.variants = booggraad,booggraden,graad,graden,º
+degree.format = º
+
+[area]
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,vierkante %@,vrknt %@,vierkant %@
+acre.variants = acre, acres
+hectare.variants = hectare, hectares, ha
+are.variants = a, are, ares
+
+[css]
+pixel.variants = pixel, pixels, px, px.
+em.variants = em, ems
+
+[dates]
+today.variants = vandaag
+tomorrow.variants = morgen
+yesterday.variants = gisteren
+local_time.variants = lokaal, lokale, plaatselijk, plaatselijke, lokale tijdzone, plaatselijke tijdzone
+current_time.variants = tijd, nu
+
+[iecprefixes]
+mebi.prefix = mebi, mibi
+
+[length]
+inch.variants = duim
+mile.variants = mijl,mj,mj.
+foot.variants = voet,vt,vt.
+foot.format = vt
+cable.variants = kabellengte,kabel
+cable.format = kabel
+league.variants = leuga
+league.format = leuga
+nautical_mile.variants = zeemijl,NM,nm
+nautical_mile.format = nmi
+chain.variants = ch
+chain.format = ch
+
+[operations]
+assignment.variants = gelijk, is gelijk, zijn gelijk, is gelijk aan, zijn gelijk aan, is, zijn
+conversion.variants = als,zoals,aan,naar,op,voor,met
+plus.variants = met,en
+minus.variants = min,zonder,aftrekken,trek af
+multiply.variants = maal,keer,vermenigvuldigd met,vermenigvuldigen,vermenigvuldigt,vermenigvuldigen met,vermenigvuldigt met,vermen,ver,vvuld,vuld,vuldig
+divide.variants = deel,deel door,delen,delen door,gedeeld door
+sum.variants = som,totaal
+avg.variants = gemiddeld,gemiddelde,gemi,gem,gemd,gemde
+prev.variants = vorg
+sqrt.variants = vierkantswortel,vierkantswortels
+cbrt.variants = derdemachtswortel,kubieke wortel
+
+[percent]
+percent.variants = procent,pc,pc.
+percent_of.variants = uit,van
+percent_off.variants = afgetrokken van
+percent_on.variants = bij,erbij,erbovenop
+as_a_percent_of.variants = als % van,als een procent van
+as_a_percent_off.variants = als % afgetrokken van,als een procent afgetrokken van
+as_a_percent_on.variants = als % bij,als een procent bij
+percent_of_what_is.variants = van wat is
+percent_off_what_is.variants = afgetrokken wat is
+percent_on_what_is.variants = bij wat is
+
+[siprefixes]
+hecto.symbol = uur
+
+[scales]
+thousand.variants = duizend,Duizend,duizenden,Duizenden
+million.variants = miljoen,Miljoen,miljoenen,Miljoenen
+billion.variants = miljard,Miljard,miljarden,Miljarden
+
+[temperature]
+celsius.variants = Celsius,ºC
+celsius.format = ºC
+fahrenheit.variants = Fahrenheit,Fahrenheits,ºF
+fahrenheit.format = ºF
+kelvin.variants = Kelvin
+
+[time]
+second.variants = seconde,secondes,seconden,secs,secn
+minute.variants = minuut,minuten
+hour.variants = uur
+hour.format = uur
+day.variants = dag,dagen
+day.format = dag
+week.variants = weken
+month.variants = maand,maanden,md
+month.format = md
+year.variants = jaar,j
+year.format = jaar
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,kubieke %@,kubiek %@,kub %@,kbk %@
+litre.symbol = L
+cup.variants = kop,kopje
+tablespoon.variants = eetlepel,eetlepels,tbl,tbs,etpl,etpl.
+tablespoon.format = tbs
+teaspoon.variants = theelepel,theelepels,tlp,tlp.,tpl,tpl.
+teaspoon.format = tpl
+pint.variants = pintje,imperial pint,imperial pintje,ptje
+pint.format = pt.
+gallon.format = gal
+cbinch.variants = kubieke duim,kubieke inch,kd,ki,KD,KI
+cbcm.variants = kubieke centimeter,cm³
+
+[weight]
+tonne.variants = ton,metrieke ton,TNT
+carat.variants = karaat,ct.,crt.,krt.,K,kt
+pound.variants = pond
+pound.format = pond
+centner.variants = centenaar,quintaal,cn,qtl
+centner.format = qtl
+ounce.variants = ons,os

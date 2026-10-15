@@ -1,0 +1,18 @@
+# Numero's launcher entry. Packaging installs it as
+# applications/dev.soldunov.numero.desktop under $XDG_DATA_HOME
+# (~/.local/share) or /usr/share, with icons/hicolor beside it, and patches
+# in Exec, MimeType and StartupWMClass (packaging/linux/desktop-entry.sh).
+# The installed name must match the app's Wayland app_id,
+# "dev.soldunov.numero", so the compositor finds this entry and its icon.
+[Desktop Entry]
+Type=Application
+Name=Numero
+GenericName=Calculator
+Comment=Write sums in plain words and see each answer as you type
+Exec=numero-app
+Icon=numero
+Terminal=false
+Categories=Utility;Calculator;
+Keywords=calculator;math;maths;sum;units;currency;convert;
+StartupNotify=true
+StartupWMClass=numero

@@ -1,0 +1,209 @@
+# ru phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = радиан,рад,радианах
+radian.format = рад
+degree.variants = °,градус,градусов,градусах,градуса,град,град.
+degree.format = °,градус,градусов,градусы
+
+[area]
+ping.variants = пинг,пинги
+ping.format = пинг
+acre.variants = акр,акров,акра,акрах
+acre.format = акр
+hectare.variants = гектар,гектаров,гектара,гектарах,га
+hectare.format = га
+are.variants = ар,ара,арах,аров
+are.format = а
+
+[css]
+pixel.variants = пиксел,пиксела,пикселу,пикселом,пикселе,пиксель,пикселя,пикселю,пекселем,пиксели,пикселей,пикселям,пикселями,пикселях,пикс.
+
+[data]
+bit.variants = бит,битов,битах,битам,биты
+bit.format = бит
+bit.symbol = бит
+byte.variants = байт,байтов,байтам,байтах,Б,байты
+byte.format = Б
+byte.symbol = Б
+
+[dates]
+today.variants = сегодня
+tomorrow.variants = завтра
+yesterday.variants = вчера
+local_time.variants = local,local timezone,local time zone,местное время,локальное время,локально
+current_time.variants = время,сейчас,time,now
+
+[iecprefixes]
+gibi.prefix = гиби
+gibi.symbol = Ги
+kibi.prefix = киби
+kibi.symbol = Ки
+zebi.prefix = зеби
+zebi.symbol = Зи
+yobi.prefix = йоби
+yobi.symbol = Йи
+mebi.prefix = меби
+mebi.symbol = Ми
+pebi.prefix = пеби
+pebi.symbol = Пи
+tebi.prefix = теби
+tebi.symbol = Ти
+exbi.prefix = эксби
+exbi.symbol = Эи
+
+[length]
+meter.variants = метров,метрах,метр,метра,м
+meter.format = м
+meter.symbol = м
+inch.variants = дюйм,дюймов,дюймах,дюйма
+inch.format = дюйм
+mile.variants = миля,миль,милях,мили
+mile.format = миля
+foot.variants = фут,футов,футах,фута
+foot.format = фут
+yard.variants = ярд,ярдов,ярдах,ярда
+yard.format = ярд
+point.variants = точка,точек,точках,точки
+point.format = точка
+cable.variants = кабельт,кабельтов,кабельтах,кабельта
+cable.format = кабельт
+league.variants = лига,лиги,лигах
+league.format = лига
+furlong.variants = фарлонг,фарлонгов,фарлонгах,фарлонга
+furlong.format = фарлонг
+nautical_mile.variants = морская миля,морских миль,морских милях,морских мили
+nautical_mile.format = морская миля
+chain.variants = чейн,чейнов,чейнах,чейна
+chain.format = чейн
+
+[operations]
+assignment.variants = равно,соответствует
+conversion.variants = в,как
+plus.variants = и,плюс,вместе с
+minus.variants = минус,без
+multiply.variants = раз по,раз,умножить,по
+divide.variants = разделить,разделить на,делим,делим на
+sum.variants = всего,сумма,итог,итого
+avg.variants = среднее,средн.,средн
+prev.variants = пред.,пред
+sqrt.variants = квадратный корень,кв корень,кв. корень
+cbrt.variants = кубический корень,куб корень,куб. корень
+
+[percent]
+percent.variants = процент,процента,проценту,процентом,проценте,проценты,процентов,процентам,процентами,процентах,проц,проц.
+percent_of.variants = от,из
+percent_off.variants = скидка от,снятие из,снятие от,снятие ото,уменьшение из,уменьшение для,уменьшение к
+percent_on.variants = добавка к,прибавка к,увеличение к,увеличение для
+as_a_percent_of.variants = как процент от,как процент
+as_a_percent_off.variants = как процентное уменьшение от,как процентное уменьшение для,как процентное уменьшение из
+as_a_percent_on.variants = как процентная добавка к,как процентное увеличение для,как процентное увеличение к
+percent_of_what_is.variants = чего является,чего есть,от чего является,от чего есть,от чего,чего
+percent_off_what_is.variants = уменьшение от чего,снятие от чего,уменьшение чего,снятие чего
+percent_on_what_is.variants = увеличение чего,увеличение от чего,добавление к чему
+
+[siprefixes]
+exa.prefix = экса
+exa.symbol = Э
+pico.prefix = пико
+pico.symbol = п
+nano.prefix = нано
+nano.symbol = н
+femto.prefix = фемто
+femto.symbol = ф
+micro.prefix = микро
+micro.symbol = мк
+mega.prefix = мега
+mega.symbol = М
+kilo.prefix = кило
+kilo.symbol = к
+zepto.prefix = зепто
+zepto.symbol = з
+deci.prefix = деци
+deci.symbol = д
+zetta.prefix = зетта
+zetta.symbol = З
+atto.prefix = атто
+atto.symbol = а
+tera.prefix = тера
+tera.symbol = Т
+milli.prefix = милли
+milli.symbol = м
+centi.prefix = санти
+centi.symbol = с
+yotta.prefix = иотта
+yotta.symbol = И
+giga.prefix = гига
+giga.symbol = Г
+peta.prefix = пета
+peta.symbol = П
+yocto.prefix = иокто
+yocto.symbol = и
+deca.prefix = дека
+deca.symbol = да
+hecto.prefix = гекто
+hecto.symbol = ч
+
+[scales]
+thousand.variants = тысяч,тысячь,тысячи,тысяча,тыс.,тыс,т,т.
+million.variants = миллион,мил.,мил,милл.,милл,миллиона,миллионов,М,млн,млн.
+billion.variants = миллиард,миллиардов,миллиарда,млрд,млрд.
+
+[temperature]
+celsius.variants = цельсий,цельсия,цельсиев,цельсиях,цельсиями,градусов цельсия
+fahrenheit.variants = градус фаренгейта,градуса фаренгейта,градусу фаренгейта,градусом фаренгейта,градусы фаренгейта,градусов фаренгейта,градусам фаренгейта,градусами фаренгейта,градусах фаренгейта
+kelvin.variants = кельвин,градус кельвина,градуса кельвина,градусов кельвина,кельвинов,кельвина,кельвине,кельвинах
+
+[time]
+second.variants = сек,секунда,секунды,секунд,секундах,сек.
+second.format = с
+second.symbol = с
+minute.variants = мин,мин.,минута,минуты,минут,минутах
+minute.format = мин
+hour.variants = час,часа,часов,часах
+hour.format = ч
+day.variants = день,дня,дней,днях,д
+day.format = д
+week.variants = неделя,недели,недель,неделях,нед.,нед
+week.format = нед.
+month.variants = месяц,месяца,месяцев,месяцах,мес,мес.
+month.format = мес.
+year.variants = год,года,лет,годах
+year.format = г
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,куб. %@,кубический %@
+litre.variants = литр,литров,литрах,литра,л
+litre.format = л
+litre.symbol = л
+cup.variants = чашка,чашек,чашках,чашку,чашкам,чаш.,чашк,чашк.,чаш,чашки
+cup.format = чаш.
+tablespoon.variants = ст. л.,ст. ложка,столовая ложка,столовой ложки,столовой ложке,столовых ложек,столовые ложки,столовыми ложками,столовых ложках,ст.л.
+tablespoon.format = ст. л.
+teaspoon.variants = ч. л.,ч.л.,чайная ложка,ч. ложка,ч. ложках,ч. ложки,ч. ложками,чайных ложки,чайных ложках,чайной ложке,чайные ложки
+teaspoon.format = ч. л.
+quart.variants = кварта,четверть,кварт.,кварт,квартах,кварте
+quart.format = кварт.
+pint.variants = пинт,пинта,пинтах
+pint.format = пинт.
+gallon.variants = галлон,гал.,гал,галлона,галлонов,галлонах,галлоне
+gallon.format = гал.
+cbinch.variants = дюйм³
+cbcm.variants = см³
+
+[weight]
+gram.variants = грамм,граммов,грамма,граммах
+gram.format = г
+gram.symbol = г
+tonne.variants = тонны,тонна,тонн,тоннах
+tonne.format = т
+tonne.symbol = т
+stone.variants = стоун,стоунах,стоуна,стоунов
+stone.format = стоун
+carat.variants = карата,карат,каратах,каратов,кар
+carat.format = кар
+pound.variants = фунт,фунтов,фунтах,фунта
+pound.format = фунт
+centner.variants = центнер,центнеров,центнерах,центнера
+centner.format = ц
+ounce.variants = унция,унциях,унции
+ounce.format = унция

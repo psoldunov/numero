@@ -1,0 +1,20 @@
+[package]
+name = "numero-extensions"
+description = "Loads Numi-compatible JavaScript extensions into Numero's engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+dirs.workspace = true
+numero-engine.workspace = true
+rquickjs.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

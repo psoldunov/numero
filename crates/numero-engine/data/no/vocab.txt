@@ -1,0 +1,85 @@
+# no phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = rad,radianer,radians
+degree.variants = degree,°,degrees,arcdegree,grader
+
+[area]
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,kvadrat%@,kvadrat %@
+acre.variants = acre,acres,åker
+acre.format = åker
+hectare.variants = hectare,hectares,ha,hektar
+are.variants = a,are,ares,ar
+
+[css]
+pixel.variants = pixel,pixels,px,px.,piksler
+
+[data]
+bit.variants = bit,bits,b,biter
+
+[dates]
+today.variants = i dag,idag,today
+tomorrow.variants = i morgen,imorgen,tomorrow
+yesterday.variants = i går,igår,yesterday
+local_time.variants = local,local timezone,local time zone,lokaltid,lokal tid
+current_time.variants = time,now,nå
+
+[length]
+inch.variants = inches,inch,″,tommer,\"
+mile.variants = mile,miles,mi,mi.,amerikansk mil
+foot.variants = foot,foots,ft,ft.,feet,feets,fot
+foot.format = fot
+nautical_mile.variants = nmi,nautical mile,nautical miles,n.m.,nautisk mil,nm,kvartmil
+nautical_mile.format = nm
+
+[operations]
+conversion.variants = in,into,as,to,i
+plus.variants = with,plus,and,pluss,og
+multiply.variants = times,multiplied by,multiply,mul,mult,ganger,ganget med,multiplikert,multiplikert med
+divide.variants = divide,divide by,divided by,dele,dele på,dele med,delt på,delt med,subtrahert,subtrahert på,subtrahert med
+sum.variants = sum,total,summer,totalt
+avg.variants = average,avg,gjennomsnitt,gj.snitt,gj. snitt,gj snitt,snitt,middelverdi
+prev.variants = prev,forrige
+sqrt.variants = sqrt,square root,kvadratrot,andrerot,rot
+cbrt.variants = cbrt,cubic root,cube root,cubed root,kubikkrot,tredjerot
+
+[percent]
+percent.variants = %,percent,percents,pct,pct.,prosent
+percent_of.variants = from,of,av
+percent_off.variants = off,fra
+percent_on.variants = on,på
+as_a_percent_of.variants = as a % of,as a percent of,som prosent av,som % av
+
+[scales]
+thousand.variants = thousand,Thousand,thousands,Thousands,th.,th,k,tusen
+million.variants = million,Million,millions,Millions,M,mill,millioner,mill.
+billion.variants = billion,Billion,milliard,Milliard,billions,Billions,milliards,Milliards,mrd,milliarder
+
+[temperature]
+celsius.variants = celsius,C,°C,grader C
+fahrenheit.variants = fahrenheit,fahrenheits,F,°F,grader F
+kelvin.variants = kelvin,kelvins,K,grader K
+
+[time]
+second.variants = s,sec,second,seconds,sek,sekund,sekunder
+minute.variants = min,minute,minutes,minutt,minutter
+hour.variants = h,hr,hour,hours,time,timer
+hour.format = t
+day.variants = dag,dager,d
+day.format = dag
+week.variants = uke,u,uker
+week.format = u
+month.variants = måned, måneder
+month.format = m
+year.variants = år
+year.format = år
+
+[volume]
+tablespoon.variants = spiseskje, ss
+tablespoon.format = ss
+teaspoon.variants = teskje, ts
+teaspoon.format = ts
+cbcm.variants = cc,cm
+
+[weight]
+tonne.variants = tonne,tonnes,t,metric ton,tonn
+carat.format = karat

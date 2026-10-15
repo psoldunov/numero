@@ -1,0 +1,185 @@
+# zh-Hans phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = 弧度
+degree.variants = 度
+
+[area]
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,平方%@
+acre.variants = 英亩
+hectare.variants = 公顷
+hectare.format = hm²
+are.variants = 公顷
+
+[css]
+pixel.variants = 像素
+
+[data]
+bit.variants = 位
+byte.variants = 字节
+
+[dates]
+today.variants = 今天，今日，今
+tomorrow.variants = 明天，明日，明
+yesterday.variants = 昨天
+local_time.variants = 当地,当地时区
+current_time.variants = 时间,现在
+
+[iecprefixes]
+gibi.prefix = GB
+kibi.prefix = KB
+zebi.prefix = ZB
+yobi.prefix = YB
+mebi.prefix = MB
+pebi.prefix = PB
+tebi.prefix = TB
+exbi.prefix = EB
+
+[length]
+meter.variants = 米
+inch.variants = 英寸
+mile.variants = 英里
+foot.variants = 英尺
+foot.format = 英尺
+yard.variants = 码
+yard.format = 码
+point.variants = 点
+point.format = 点
+cable.variants = 缆
+cable.format = 缆
+league.variants = 里格
+league.format = 里格
+furlong.variants = 弗隆
+furlong.format = 弗隆
+nautical_mile.variants = 海里
+nautical_mile.format = 海里
+chain.variants = 链
+chain.format = 链
+
+[operations]
+assignment.variants = 等于, 是
+conversion.variants = 换成,换算
+plus.variants = 加,和,加上
+minus.variants = 减,减去
+multiply.variants = 乘,乘以
+divide.variants = 除,除以
+sum.variants = 总和,和,共,合计,共计
+avg.variants = 平均,平均数
+prev.variants = 上一个结果
+sqrt.variants = 平方根，根
+cbrt.variants = 立方根
+
+[percent]
+percent.variants = 百分之，百分比
+percent_of.variants = …里的，…的
+percent_off.variants = 从…减少
+percent_on.variants = 往…加上
+as_a_percent_of.variants = 占%,占比
+as_a_percent_off.variants = 差%,差比
+
+[siprefixes]
+exa.prefix = 艾
+exa.symbol = 艾
+pico.prefix = 皮
+pico.symbol = 皮
+nano.prefix = 纳
+nano.symbol = 纳
+femto.prefix = 飞，飞母托
+femto.symbol = 飞
+micro.prefix = 微
+micro.symbol = 微
+mega.prefix = 兆
+mega.symbol = 兆
+kilo.prefix = 千
+kilo.symbol = 千
+zepto.prefix = 仄
+zepto.symbol = 仄
+deci.prefix = 分
+deci.symbol = 分
+zetta.prefix = 泽
+zetta.symbol = 泽
+atto.prefix = 阿，阿托
+atto.symbol = 阿
+tera.prefix = 太
+tera.symbol = 太
+milli.prefix = 毫
+milli.symbol = 毫
+centi.prefix = 厘
+centi.symbol = 厘
+yotta.prefix = 尧
+yotta.symbol = 尧
+giga.prefix = 京
+giga.symbol = 吉
+peta.prefix = 拍
+peta.symbol = 拍
+yocto.prefix = 幺，攸
+yocto.symbol = 幺
+deca.prefix = 十
+deca.symbol = 十
+hecto.prefix = 百
+hecto.symbol = 小时
+
+[scales]
+thousand.variants = 千
+million.variants = 百万
+billion.variants = 十亿
+
+[temperature]
+celsius.variants = 摄氏度
+celsius.format = 摄氏度
+fahrenheit.variants = 华氏度
+fahrenheit.format = 华氏度
+kelvin.variants = 开
+kelvin.format = 开尔文
+
+[time]
+second.variants = 秒
+second.format = 秒
+second.symbol = 秒
+minute.variants = 分钟
+minute.format = 分钟
+hour.variants = 小时
+hour.format = 小时
+day.variants = 天
+day.format = 天
+week.variants = 周
+week.format = 周
+month.variants = 月
+month.format = 月
+year.variants = 年
+year.format = 年
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,立方%@
+volume.format = 立方%@
+litre.variants = 升
+litre.format = 升
+cup.variants = 杯
+cup.format = 杯，cup
+tablespoon.variants = 茶勺
+tablespoon.format = 茶勺
+teaspoon.variants = 茶匙
+teaspoon.format = 茶勺
+quart.variants = 夸脱
+quart.format = 夸脱
+pint.variants = 品脱
+pint.format = 品脱
+gallon.variants = 加仑
+gallon.format = 加仑
+cbinch.variants = 立方英寸
+cbcm.variants = 立方厘米
+
+[weight]
+gram.variants = 克
+tonne.variants = 吨
+tonne.format = 吨
+tonne.symbol = 吨
+stone.variants = 英石
+stone.format = 英石
+carat.variants = 克拉
+carat.format = 克拉
+pound.variants = 磅
+pound.format = 磅
+centner.variants = 森特纳
+centner.format = 森特纳
+ounce.variants = 盎司
+ounce.format = 盎司

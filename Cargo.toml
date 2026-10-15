@@ -1,0 +1,108 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+authors = ["Philipp Soldunov"]
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+numero-engine = { path = "crates/numero-engine" }
+numero-rates = { path = "crates/numero-rates" }
+numero-extensions = { path = "crates/numero-extensions" }
+numero-library = { path = "crates/numero-library" }
+
+# The app on Linux and macOS. GPUI Kit pins the GPUI snapshot it was built
+# against exactly; it goes by `gpui` so GPUI's macros resolve through it.
+# Bump both together, on purpose, never with a plain `cargo update`. Same
+# pair as the concierge repository.
+gpui = { package = "gpui-kit", version = "=0.7.1" }
+gpui-component = "=0.7.1"
+
+# The app's window blur, the same as concierge's: the raw window and display
+# handles GPUI hands out, and on Linux a second handle on GPUI's Wayland
+# display that speaks ext-background-effect-v1 (in `staging`); on macOS the
+# NSWindow, and whether the user asked to reduce transparency.
+raw-window-handle = "0.6.2"
+wayland-backend = { version = "0.3.17", features = ["client_system", "dlopen"] }
+wayland-client = "0.31.15"
+wayland-protocols = { version = "0.32.13", features = ["client", "staging"] }
+objc2 = "0.6.4"
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std"] }
+
+# The app's place in the desktop (`system`), as concierge does it, minus its
+# tokio runtime: nothing here needs one. Events from the tray's, the
+# hotkey's and the single instance's threads reach the UI over a channel.
+async-channel = "2.5.0"
+# The tray icon on Linux, over StatusNotifierItem. `async-io`, not `tokio`,
+# the runtime GPUI's own zbus already runs on; ksni then serves the item on
+# an executor of its own.
+ksni = { version = "0.3.6", default-features = false, features = ["async-io"] }
+# `StreamExt`, for the portal's presses. ashpd already depends on it.
+futures-util = { version = "0.3.34", default-features = false }
+# The global hotkey on Linux, over the XDG GlobalShortcuts portal, and the
+# desktop's light or dark for the tray glyph. `async-io`, as GPUI's own copy:
+# ashpd refuses `tokio` beside it.
+ashpd = { version = "0.13.13", default-features = false, features = [
+  "async-io",
+  "global_shortcuts",
+  "settings",
+] }
+# Always on top under X11: `_NET_WM_STATE_ABOVE`, on a connection of its
+# own. Wayland has no protocol for it. GPUI already pulls it in.
+x11rb = { version = "0.13.2", default-features = false }
+# macOS: whether the app runs from its bundle (`NSBundle`), and its login
+# item through `SMAppService`, only the classes used.
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std"] }
+objc2-service-management = { version = "0.3.2", default-features = false, features = [
+  "std",
+  "SMAppService",
+  "SMErrors",
+  "objc2",
+  "objc2-foundation",
+] }
+# The menu-bar item on macOS, an NSStatusItem. No default features: they are
+# Linux's libappindicator.
+tray-icon = { version = "0.26.1", default-features = false }
+# The global hotkey on macOS, through Carbon's RegisterEventHotKey, which
+# needs no Accessibility permission.
+global-hotkey = "0.8.0"
+
+# Dates, times and time zones for `today`, `now`, `PST time`, `time in Berlin`.
+chrono = { version = "0.4.45", default-features = false, features = ["clock", "std"] }
+chrono-tz = "0.10"
+# Decimal arithmetic for the engine, so `0.1 + 0.2` is exactly `0.3`.
+rust_decimal = { version = "1.43", default-features = false, features = ["std"] }
+# Currency and crypto rates, fetched in the background and cached on disk.
+ureq = { version = "3.4.2", default-features = false, features = ["rustls", "json"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+dirs = "6.0.0"
+thiserror = "2.0.21"
+tracing = { version = "0.1.44", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std"] }
+# Numi-compatible JavaScript extensions. QuickJS, built from C by the dev
+# shell's compiler (Xcode's on macOS); no std/os modules, no `parallel`.
+rquickjs = { version = "0.14", default-features = false, features = ["std"] }
+# Changes to the calculations folder made by sync or another app: FSEvents
+# on macOS, inotify on Linux.
+notify = "8.2.0"
+# Tests that write files, such as the app's document store.
+tempfile = "3.27.0"
+
+[profile.release]
+overflow-checks = true
+
+[workspace.lints.rust]
+missing_debug_implementations = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+unwrap_used = "warn"

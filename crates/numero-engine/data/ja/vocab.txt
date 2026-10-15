@@ -1,0 +1,72 @@
+# ja phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = ラジアン,rad,ラジアン
+
+[area]
+hectare.variants = ヘクタール,ha
+
+[css]
+pixel.variants = px,pixel,ピクセル
+em.variants = em,エム
+
+[data]
+bit.variants = bit,bits,b,ビット
+byte.variants = byte,bytes,B,バイト
+
+[dates]
+today.variants = today,今日
+tomorrow.variants = tomorrow,明日
+yesterday.variants = yesterday,昨日
+
+[length]
+meter.variants = メートル, m
+inch.variants = インチ,inch
+inch.format = インチ
+mile.variants = マイル
+mile.format = mi
+foot.variants = フィート,ft
+yard.variants = ヤード,yd
+point.variants = ポイント,point,pt
+
+[siprefixes]
+hecto.prefix = ヘクト
+hecto.symbol = 時間
+
+[temperature]
+celsius.variants = 摂氏,摂氏温度,°C
+celsius.format = °C,度
+fahrenheit.variants = 華氏,華氏温度,°F
+
+[time]
+second.variants = 秒
+second.format = 秒
+second.symbol = 秒
+minute.variants = 分
+minute.format = 分
+hour.variants = 時間
+hour.format = 時間
+day.variants = 日
+day.format = 日
+week.variants = 週
+week.format = 週
+month.variants = 月
+month.format = 月
+year.variants = 年
+year.format = 年
+
+[volume]
+litre.variants = l,リットル,リッター
+litre.symbol = L
+cup.variants = カップ
+cup.format = カップ
+teaspoon.format = 小さじ
+pint.variants = パイント
+pint.format = パイント
+gallon.variants = ガロン
+gallon.format = ガロン
+
+[weight]
+pound.format = ポンド
+centner.format = センテナー
+ounce.variants = オンス、オンス、オンス
+ounce.format = オンス

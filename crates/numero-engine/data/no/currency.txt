@@ -1,0 +1,8 @@
+# no phrase tables, same format as data/en. English is always merged in.
+[currency]
+BTC.variants = Bitcoins,Bitcoin,B⃦
+BYR.variants = Belarusian ruble,Belarusian rubles,bel. ruble,bel rubles
+BYR.format = %@ Br
+CHF.variants = Swiss Francs,Swiss Franc,SFr.,Sveitsiske franc
+CLP.variants = Chilean Pesos,Chilean Peso,chilenske peso
+DKK.variants = Danske kroner, dansk krone, dkk

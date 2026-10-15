@@ -1,0 +1,30 @@
+# uk phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = радіан,радіани,рад
+radian.format = рад
+degree.variants = градус,°,градуси,градусів
+
+[area]
+ping.format = ping
+acre.variants = акр,акри,акрів
+acre.format = акр
+hectare.variants = гектар,гектари,га
+hectare.format = га
+are.variants = ар,сотка,соток
+
+[css]
+pixel.variants = піксель,пікселі,пікселів,пк,пкс
+pixel.format = пк
+
+[operations]
+assignment.variants = дорівнює,є
+
+[weight]
+carat.variants = карат,каратів,карати,кар
+carat.format = кар
+pound.variants = фунт,фунтів
+pound.format = фунт
+centner.variants = центнерів,центнери,центнер
+centner.format = центнер
+ounce.variants = унція,унцій,унц
+ounce.format = унц

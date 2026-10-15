@@ -1,0 +1,67 @@
+[package]
+name = "numero-app"
+description = "Numero's GPUI app for Linux and macOS"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "numero-app"
+path = "src/main.rs"
+
+[dependencies]
+# Events from the tray's, the hotkey's and the single instance's threads.
+async-channel.workspace = true
+chrono.workspace = true
+dirs.workspace = true
+gpui.workspace = true
+gpui-component.workspace = true
+numero-engine.workspace = true
+numero-extensions.workspace = true
+numero-library.workspace = true
+numero-rates.workspace = true
+raw-window-handle.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# The blur behind the window, through ext-background-effect-v1.
+wayland-backend.workspace = true
+wayland-client.workspace = true
+wayland-protocols.workspace = true
+# `system`: the tray icon, the global hotkey through the portal, and always
+# on top under X11.
+ashpd.workspace = true
+futures-util.workspace = true
+ksni.workspace = true
+x11rb.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# The blur behind the window, through the window server; `system`'s window
+# level and Space.
+objc2.workspace = true
+objc2-app-kit = { workspace = true, features = [
+  "NSAccessibility",
+  "NSResponder",
+  "NSView",
+  "NSWindow",
+  "NSWorkspace",
+] }
+# `system`: the login item, whether the app runs from its bundle, the
+# menu-bar item and the global hotkey.
+objc2-foundation = { workspace = true, features = ["NSBundle", "NSError", "NSString"] }
+objc2-service-management.workspace = true
+tray-icon.workspace = true
+global-hotkey.workspace = true
+
+[dev-dependencies]
+gpui = { workspace = true, features = ["test-support"] }
+tempfile.workspace = true
+
+[lints]
+workspace = true

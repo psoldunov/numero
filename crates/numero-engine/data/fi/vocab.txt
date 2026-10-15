@@ -1,0 +1,19 @@
+# fi phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radiaani,rad,radiaania
+degree.variants = aste,°,astetta
+
+[area]
+ping.variants = ping,píng,pingiä,píngiä
+area.templates = neliö%@,neliö %@,neliö-%@,%@²,%@ ²,%@ 2
+acre.variants = eekkeri,eekkeriä
+acre.format = eekkeri
+hectare.variants = hehtaari,hehtaaria,ha
+are.variants = a,aari,aaria
+
+[css]
+pixel.variants = pikseli,pikseliä,px,px.
+em.variants = em,emejä
+
+[operations]
+assignment.variants = yhtä suuri kuin,on yhtä kuin

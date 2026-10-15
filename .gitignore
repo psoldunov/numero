@@ -1,0 +1,15 @@
+# Rust
+/target/
+
+# Nix and direnv
+/result
+/result-*
+.direnv/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Ensemblr compute-queue logs
+/.context/

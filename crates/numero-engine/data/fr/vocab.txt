@@ -1,0 +1,125 @@
+# fr phrase tables, same format as data/en. English is always merged in.
+[angle]
+degree.variants = degre,degré,degres,degrés,degré d'arc,degrés d'arc
+
+[area]
+ping.format = ping
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,carré %@,carre %@,car%@,car %@
+acre.format = acres
+are.variants = aire,aires
+
+[css]
+em.format = ems
+
+[data]
+byte.variants = byte,bytes,B,octet,o
+byte.format = B,o
+byte.symbol = B,o
+
+[dates]
+today.variants = aujourd'hui
+tomorrow.variants = demain
+yesterday.variants = hier
+local_time.variants = local,fuseau horaire local,fuseau horaire local
+current_time.variants = temps, maintenant
+
+[iecprefixes]
+mebi.prefix = mibi
+
+[length]
+meter.variants = mètre,mètres
+inch.variants = pouce,pouces
+inch.format = '
+mile.format = miles
+foot.variants = pied,pieds
+foot.format = pieds
+yard.variants = verge,verges,vg,vg.
+yard.format = vg
+point.variants = pts,pts.
+point.format = pts
+cable.variants = câble,câbles
+cable.format = câbles
+league.variants = lieue,lieues
+league.format = lieues
+furlong.variants = sillon,sillons
+furlong.format = sillon
+nautical_mile.variants = mile nautique,miles nautiques,m.n.,mn
+chain.variants = chaine,chaines,chaîne,chaînes
+chain.format = chaînes
+
+[numbers]
+binary.variants = binaire, bin
+decimal.variants = décimal, dec
+scientific.variants = scientifique, sci, exp, exposant, exponentiel
+
+[operations]
+assignment.variants = est égal, sont égaux, égal, égaux, est, sont
+conversion.variants = en,dans,comme,vers
+plus.variants = avec,et
+minus.variants = moins,sans,soustrait
+multiply.variants = fois,multiple,multiple par,multiplié par,multiplié
+divide.variants = divise,divise par,diviser,diviser par,divisé,divisé par
+sum.variants = somme
+avg.variants = moyenne,moyen,moy
+prev.variants = prec
+sqrt.variants = racine carrée,racines carrées
+cbrt.variants = racine cubique,racines cubiques
+
+[percent]
+percent.variants = pourcent,pourcents,p.c.,pc,per c.
+percent_of.variants = à partir de,de
+percent_off.variants = de réduction de
+percent_on.variants = d'augmentation de
+as_a_percent_of.variants = sous forme de %,comme un pourcentage de
+as_a_percent_off.variants = comme un % de réduction,comme un % de diminution,comme un % de réduction de,comme un % de réduction du,comme un % de diminution de,comme un % de diminution du,comme une diminution de % du,comme une diminution de % de,comme un pourcentage de réduction,comme un pourcentage de réduction de,comme un pourcentage de réduction du,comme un pourcentage de diminution,comme un pourcentage de diminution de
+as_a_percent_on.variants = comme un % d'augmentation,comme un % d'augmentation de,comme un % d'augmentation du,comme une augmentation de % du,comme une augmentation de % de,comme un pourcentage d'augmentation,comme un pourcentage d'augmentation de,comme un pourcentage d'augmentation du
+percent_of_what_is.variants = de quoi est
+percent_off_what_is.variants = enlevé de est
+percent_on_what_is.variants = sur ce qui est
+
+[siprefixes]
+mega.prefix = méga
+deci.prefix = déci
+tera.prefix = téra
+peta.prefix = péta
+deca.prefix = déca
+
+[scales]
+thousand.variants = mille,milles,milliers,m.,m
+
+[time]
+second.variants = seconde,secondes
+minute.variants = mins
+hour.variants = hrs,heure,heures
+day.variants = jour,jours,j
+day.format = jours
+week.variants = semaine,sem,semaines
+week.format = semaines
+month.variants = mois
+month.format = mois
+year.variants = a,aa,année,années,annee,annees
+year.format = ans
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,cube %@
+litre.symbol = L
+cup.variants = tasse,tasses
+cup.format = tasses
+tablespoon.variants = cuillère à soupe,cuillères à soupe
+teaspoon.variants = cuillère à thé,cuillères à thé,cuillère à café,cuillères à café
+quart.format = quarts
+pint.variants = pinte,pintes
+pint.format = pintes
+gallon.format = gallons
+cbinch.variants = pouce cubique,pouces cubiques,pouce cube,pouces cubes
+cbcm.variants = centimètre cubique,centimètres cubiques,centimètre cube,centimètres cubes
+
+[weight]
+stone.variants = pierre,pierres
+stone.format = pierres
+carat.format = carats
+pound.variants = livre,livres
+centner.variants = quintaux
+centner.format = quintaux
+ounce.variants = once,onces
+ounce.format = onces

@@ -1,0 +1,10 @@
+# he phrase tables, same format as data/en. English is always merged in.
+[angle]
+degree.variants = מעלות,°
+
+[css]
+pixel.variants = פיקסל, פיקסלים
+pixel.format = פיקסל, פיקסלים
+
+[operations]
+assignment.variants = שווה,שווה ל,זה

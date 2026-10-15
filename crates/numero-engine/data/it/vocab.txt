@@ -1,0 +1,132 @@
+# it phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radiante,radianti,rad.
+degree.variants = grado,gradi,grado d'arco,gradi d'arco,º
+degree.format = º
+
+[area]
+ping.format = ping
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,radice %@,rd %@,rd%@
+acre.format = acres
+hectare.variants = ettaro,ettari,ettara
+
+[css]
+em.format = ems
+
+[dates]
+today.variants = oggi
+tomorrow.variants = domani
+yesterday.variants = ieri
+local_time.variants = locale, fuso orario locale, fuso orario
+current_time.variants = tempo, adesso
+
+[iecprefixes]
+yobi.prefix = iobi
+mebi.prefix = mebi, mibi
+
+[length]
+meter.variants = metro,metri
+inch.variants = pollice,pollici
+mile.variants = miglio,miglia
+mile.format = mig
+foot.variants = piede,piedi,pd,pd.
+foot.format = pd
+yard.variants = iarda,iarde,id,id.
+yard.format = id
+point.variants = punto,punti
+league.variants = lega,leghe
+league.format = leghe
+furlong.format = furlongs
+nautical_mile.variants = miglio marino,miglia marini,miglio nautico,miglia nautici,mn,m.n.,nm
+chain.variants = catena,catene,cat,ch
+chain.format = catene
+
+[numbers]
+binary.variants = binario,bin
+octal.variants = ottale
+decimal.variants = decimale,dec
+scientific.variants = scientifica, sci, esp, esponente, esponenziale
+
+[operations]
+assignment.variants = uguale, uguali, è uguale, sono uguali, è uguale a, sono uguali a,  è, sono
+conversion.variants = per,come,a,agli
+plus.variants = con,più,e,ed
+minus.variants = meno,senza,sottrarre
+multiply.variants = volta,volte,moltiplicato per,moltiplicati per,moltiplicato pei,moltiplicati pei,moltiplicato per il,moltiplicati per il,moltiplicato per i,moltiplicati per i,moltiplicato per gli,moltiplicati per gli,moltiplicato per lo,moltiplicati per lo,moltiplicato per l',moltiplicati per l',moltiplica,moltiplicano
+divide.variants = dividono,divide per,dividono per,divide per il,dividono per il,divide per l',dividono per l',divide per i,dividono per i,divide per lo,dividono per lo,divide per gli,dividono per gli,divide da,dividono da,divide dal,dividono dallo,divide dallo,dividono dal,divide dall',dividono dall',divide dai,dividono dai,divide dagli,dividono dagli,divide dagl',dividono dagl',diviso per,divisi per,diviso per il,divisi per il,diviso per i,divisi per i,diviso pei,divisi pei,diviso per l',divisi per l',diviso per lo,divisi per lo,diviso gli,divisi gli,diviso gl',divisi,gl',diviso da,divisi da,diviso dal,divisi dal,diviso dai,divisi dai,diviso dallo,divisi dallo,diviso dagli,divisi dagli,diviso dagl',divisi dagl'
+sum.variants = somma,totale
+avg.variants = media,med.
+prev.variants = preced.
+sqrt.variants = radice quadrata
+cbrt.variants = radice quadrata
+
+[percent]
+percent.variants = percento,percentuale,percentuali
+percent_of.variants = da,dal,dall',dallo,dagli,dagl',d',di,del,dell',dello,degli,degl'
+percent_off.variants = di sconto di
+percent_on.variants = su,sui,sul,sullo,sull',sugli,sugl',sulla,sulle
+as_a_percent_of.variants = come % di,come un numero di % di,come un percentuale di
+as_a_percent_off.variants = come % di sconto d',come % di sconto di,come % di sconto dei,come % di sconto del,come % di sconto dello,come % di sconto dell',come % di sconto degli,come % di sconto degl',come % di sconto della,come % di sconto delle,come un numero di % di sconto d',come un numero di % di sconto di,come un numero di % di sconto dei,come un numero di % di sconto del,come un numero di % di sconto dello,come un numero di % di sconto dell',come un numero di % di sconto degli,come un numero di % di sconto degl',come un numero di % di sconto della,come un numero di % di sconto delle,come un percentuale di sconto,come un percentuale di sconto d',come un percentuale di sconto di,come un percentuale di sconto dei,come un percentuale di sconto del,come un percentuale di sconto dello,come un percentuale di sconto dell',come un percentuale di sconto degli,come un percentuale di sconto degl',come un percentuale di sconto della,come un percentuale di sconto delle
+as_a_percent_on.variants = come % su,come % sui,come % sul,come % sullo,come % sull’,come % sugli,come % sugl’,come % sulla,come % sulle,come un numero di % di aumento d',come un numero di % di aumento di,come un numero di % di aumento dei,come un numero di % di aumento del,come un numero di % di aumento dello,come un numero di % di aumento dell',come un numero di % di aumento degli,come un numero di % di aumento degl',come un numero di % di aumento della,come un numero di % di aumento delle,come un percentuale di aumento,come un percentuale di aumento d',come un percentuale di aumento di,come un percentuale di aumento dei,come un percentuale di aumento del,come un percentuale di aumento dello come un percentuale di aumento dell',come un percentuale di aumento degli,come un percentuale di aumento degl',come un percentuale di aumento della,come un percentuale di aumento delle
+percent_of_what_is.variants = di un numero fa,di un numero fanno,fa,fanno
+percent_off_what_is.variants = di sconto fa,di sconto fanno,di sconto di un numero fa,di sconto di un numero fanno,di un numero di sconto fa,di un numero di sconto fanno
+percent_on_what_is.variants = di aumento fa,di aumento fanno,di un numero di aumento fa,di un numero di aumento fanno,di aumento di un numero fa,di aumento di un numero fanno
+
+[siprefixes]
+kilo.prefix = chilo
+yotta.prefix = iotta
+
+[scales]
+thousand.variants = mille,milla,migliaio,migliaia,mil,mil.,migl,migl.
+million.variants = milione,milioni,mili,mili.
+billion.variants = miliardo,miliardi
+
+[temperature]
+celsius.variants = ºC
+celsius.format = ºC
+fahrenheit.variants = Fahrenheit,Fahrenheits,ºF
+fahrenheit.format = ºF
+kelvin.variants = Klevin,Kelvin
+
+[time]
+second.variants = sec.,secondo,secondi
+minute.variants = minuto,minuti
+hour.variants = ora,ore,o
+day.variants = giorno,giorni,gio,gio.
+day.format = gio
+week.variants = settimana,settimane
+week.format = sett
+month.variants = mese,mesi
+month.format = mesi
+year.variants = anno,anni
+year.format = anni
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,cubo %@,cubico %@,cub %@
+litre.variants = litro,litri
+litre.symbol = L
+cup.variants = tazza,tazze
+cup.format = tazze
+tablespoon.variants = cucchiaio,cucchiaini,cucch.,cucch
+tablespoon.format = cucch
+teaspoon.variants = cucchiaino,cucchiaini
+teaspoon.format = cchi.
+quart.variants = quarto,quarti,qrt,qrt.
+quart.format = qt
+pint.variants = pinta
+pint.format = pt
+gallon.variants = gallone,galloni
+gallon.format = gal
+cbinch.variants = pollice cubo,pollici cubi,ci,C.I.,cu in,cu inches,inch³,inches³
+cbcm.variants = centimetro cubo,centimetri cubi
+
+[weight]
+gram.variants = grammo,grammi
+tonne.variants = tonnellata,tonnellate,tonnellata metrica,tonnellate metriche
+stone.variants = pietra,pietre,piet,piet.
+stone.format = pietre
+carat.variants = carato,carati
+pound.variants = libbra,libbre
+centner.variants = quintale,quintali,q
+centner.format = q
+ounce.variants = oncia,once,oc

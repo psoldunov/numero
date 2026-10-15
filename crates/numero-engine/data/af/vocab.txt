@@ -1,0 +1,145 @@
+# af phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radiaal,radiale,rad.,straalhoek,straalboog,straalhoeke,straalboë
+degree.variants = booggraad,booggrade,graad,grade,º
+
+[area]
+area.templates = %@²,%@ ²,vierkante %@,vrknt %@,vierkant %@,%@ 2
+acre.variants = akker,acre,akkers,acres
+hectare.variants = hektaar,hektare,ha
+are.variants = a,aar,are
+
+[css]
+pixel.variants = pieksel,pieksels,px,px.
+
+[data]
+bit.variants = bis,bisse,b
+byte.variants = greep,grepe,g
+byte.format = g
+byte.symbol = g
+
+[dates]
+today.variants = vandag
+tomorrow.variants = môre
+yesterday.variants = gister
+local_time.variants = plaaslik,plaaslike tydsone,plaaslike tyd
+current_time.variants = tyd,nou
+
+[iecprefixes]
+yobi.prefix = jobi
+exbi.prefix = eksbi
+
+[length]
+meter.variants = meter,meters,m
+inch.variants = duime,duim,”
+inch.format = ”
+mile.variants = myl,myle,m.
+mile.format = m.
+foot.variants = voet,voete,vt.
+foot.format = vt.
+yard.variants = jaart,jaarts,jt.
+yard.format = jt.
+point.variants = punt,punte,pt.
+point.format = pt.
+cable.variants = kabel,kabellengte,kabels
+cable.format = kabel
+nautical_mile.variants = sm.seemyl,seemyle
+nautical_mile.format = sm.
+chain.variants = chain,chains,ketting,kettings
+chain.format = ketting
+
+[numbers]
+binary.variants = binêr,bin
+octal.variants = oktaal
+decimal.variants = desimaal,des
+scientific.variants = wetenskaplik, wet, eksp, eksponent, eksponensieel
+
+[operations]
+assignment.variants = gelyk,gelyk aan,is gelyk,is gelyk aan,is
+conversion.variants = as,soos,aan,na,op,vir,met
+plus.variants = met,plus,en
+minus.variants = minus,sonder,trek af
+multiply.variants = vermenigvuldig,maal,maal met,vermenigvuldig met,keer
+divide.variants = deel,deel deur,gedeel deur,deel met,gedeel met
+sum.variants = som,totaal
+avg.variants = gemiddeld,gem.
+prev.variants = vorige
+sqrt.variants = vierkantswortel,vierkantswortels
+cbrt.variants = derdemagswortel,kubieke wortel
+
+[percent]
+percent.variants = %,persent,persentasie,ps.,persentasies
+percent_of.variants = uit,van
+percent_off.variants = afgetrek van
+percent_on.variants = by,bo-op
+as_a_percent_of.variants = as % van,as persentasie van
+as_a_percent_off.variants = as % afgetrek van,as persentasie afgetrek van,as % vermindering van,as persentasie vermindering van
+as_a_percent_on.variants = as % by,as persentasie by,as % vermeerdering van,as persentasie vermeerdering van
+percent_of_what_is.variants = van wat is
+percent_off_what_is.variants = afgetrek wat is
+percent_on_what_is.variants = by wat is
+
+[siprefixes]
+exa.prefix = eksa
+pico.prefix = piko
+micro.prefix = mikro
+deci.prefix = desi
+centi.prefix = senti
+yotta.prefix = jotta
+yocto.prefix = jokto
+deca.prefix = deka
+hecto.prefix = hekto
+
+[scales]
+thousand.variants = duisend,Duisend,duisende,Duisende,k
+million.variants = miljoen,Miljoen,miljoene,Miljoene,m.
+billion.variants = miljard,Miljard,miljarde,Miljarde,mjd.
+
+[temperature]
+fahrenheit.variants = fanhrenheit,F,°F
+kelvin.variants = kelvin,K
+
+[time]
+second.variants = s,s.,sek.,sekonde,sekondes
+minute.variants = m.,min.,minuut,minute
+minute.format = min.
+hour.variants = h,u.,uur,ure
+day.variants = dag,dae,d
+day.format = dag
+week.variants = week,w.,weke
+week.format = w.
+month.variants = maand,maande,md.
+month.format = md.
+year.variants = j.,jaar,jare
+year.format = j.
+
+[volume]
+volume.templates = kub. %@,kubieke %@,kub%@,kub.%@,%@³,%@ ³,%@ 3
+litre.variants = liter,liters,l,L
+cup.variants = koppie,koppies
+cup.format = koppie
+tablespoon.variants = eetlepel,eetlepels,eet lepel,eet lepels,e.
+tablespoon.format = e.
+teaspoon.variants = teelepel,teelepels,tee lepel,tee lepels,t.
+teaspoon.format = t.
+quart.variants = kwart,kwarte,kw.
+quart.format = kw.
+pint.variants = pint,pinte,pt.
+gallon.variants = gelling,gellings,gallon,gallons,g.,gell.
+gallon.format = gell.
+cbinch.variants = kubieke duim,kd,kub. dm.
+cbcm.variants = cc,kub. cm
+
+[weight]
+gram.variants = gram,gramme,g
+tonne.variants = ton,tonne,t.,metrieke ton
+stone.variants = stone,stones,steen,stene,st.
+stone.format = st.
+carat.variants = karaat,karate,CD,kar.
+carat.format = kar.
+pound.variants = pond,ponde,pd.,lb.
+pound.format = pd.
+centner.variants = sentenaar,kwintaal,sentenaars,kwintale
+centner.format = sentenaar
+ounce.variants = ons,onse,oz.
+ounce.format = oz.

@@ -1,0 +1,104 @@
+# ko phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radian,rad,radians,라디안,호도
+degree.variants = degree,°,degrees,arcdegree,도
+
+[area]
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,제곱%@,제곱 %@
+acre.variants = acre,acres,에이커
+hectare.variants = hectare,hectares,ha,헥타르
+are.variants = a,are,ares,아르
+
+[css]
+pixel.variants = pixel,pixels,px,px.,픽셀
+
+[data]
+bit.variants = bit,bits,b,비트
+byte.variants = byte,bytes,B,바이트
+
+[dates]
+today.variants = today,오늘,금일
+tomorrow.variants = tomorrow,내일
+yesterday.variants = yesterday,어제
+local_time.variants = local,현지 시간대,현지 시간대
+current_time.variants = time,now,시간,지금,지금시간,지금 시간
+
+[length]
+meter.variants = meter,metre,metres,meters,m,미터
+inch.variants = inches,inch,″,인치
+mile.variants = mile,miles,mi,mi.,마일
+foot.variants = foot,foots,ft,ft.,feet,feets,피트
+yard.variants = yard,yards,yd,yd.,야드
+point.variants = point,points,pt,pt.,포인트
+league.variants = league,leagues,리그
+furlong.variants = furlong,furlongs,펄롱
+nautical_mile.variants = nmi,nautical mile,nautical miles,n.m.,해리
+chain.variants = chain,chains,체인
+
+[operations]
+plus.variants = with,plus,and,더하기,플러스
+minus.variants = minus,without,subtract,마이너스,빼기
+multiply.variants = times,multiplied by,multiply,mul,mult,곱하기,곱
+divide.variants = divide,divide by,divided by,나누기
+sum.variants = sum,total,합,합계,총계,총합
+avg.variants = average,avg,평균
+prev.variants = prev,이전,앞줄
+sqrt.variants = sqrt,square root,제곱근,루트
+cbrt.variants = cbrt,cubic root,cube root,cubed root,세제곱근
+
+[percent]
+percent.variants = %,percent,percents,pct,pct.,퍼센트,프로
+
+[siprefixes]
+exa.prefix = exa,엑사
+pico.prefix = pico,피코
+nano.prefix = nano,나노
+femto.prefix = femto,펨토
+micro.prefix = micro,마이크로
+mega.prefix = mega,메가
+kilo.prefix = kilo,킬로,키로
+zepto.prefix = zepto,젭토
+deci.prefix = deci,데시
+zetta.prefix = zetta,제타
+atto.prefix = atto,아토
+tera.prefix = tera,테라
+milli.prefix = milli,밀리,미리
+centi.prefix = centi,센티,센치
+yotta.prefix = yotta,요타
+giga.prefix = giga,기가
+peta.prefix = peta,페타
+yocto.prefix = yocto,욕토
+deca.prefix = deca,데카
+hecto.prefix = hecto,헥토
+
+[temperature]
+kelvin.variants = kelvin,kelvins,K,켈빈
+
+[time]
+second.variants = s,sec,second,seconds,초
+minute.variants = min,minute,minutes,분
+hour.variants = h,hr,hour,hours,시간
+day.variants = day,days,d,일
+week.variants = week,w,weeks,주
+month.variants = month,monthes,months,mon,mon.,개월
+year.variants = y,yr,year,years,년
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,세제곱%@,세제곱 %@,입방%@,입방 %@
+litre.variants = litre,litres,liter,liters,l,L,리터
+litre.symbol = L
+quart.variants = quart,quarts,qt.,qt,쿼트
+pint.variants = pint,pt,pints,pt.,파인트
+pint.format = pt.
+gallon.variants = gallon,gallons,gal.,gal,갤런
+cbinch.variants = c.i.,CI,cui,cu inch,세제곱인치,세제곱 인치,입방인치,입방 인치
+cbcm.variants = cc,ccm,세제곱센티미터,세제곱센치미터,입방센티미터,입방센치미터,세제곱 센티미터,세제곱 센치미터,입방 센티미터,입방 센치미터
+
+[weight]
+gram.variants = gram,gramme,grams,grammes,g,그램
+tonne.variants = tonne,tonnes,t,metric ton,톤
+stone.variants = stone,stones,st,스톤
+carat.variants = carat,carats,CD,ct,캐럿,캐롯
+pound.variants = pound,pounds,lb,lbm,파운드
+centner.variants = centner,quintal,centners,quintals,챈트너
+ounce.variants = ounce,ounces,oz,온스,온즈

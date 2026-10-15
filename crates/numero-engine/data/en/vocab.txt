@@ -1,0 +1,230 @@
+# English phrase tables for Numero's parser: `<id>.variants` lists the
+# comma-separated phrases the parser accepts, `<id>.format` is the output
+# template, `<id>.symbol` the SI symbol that takes prefixes. One file per
+# locale; ratios live in code (src/units.rs), not here.
+
+[length]
+meter.variants = meter,metre,metres,meters,m
+meter.format = m
+meter.symbol = m
+inch.variants = inches,inch,″
+inch.format = ″
+mile.variants = mile,miles,mi,mi.
+mile.format = mi.
+foot.variants = foot,foots,ft,ft.,feet,feets
+foot.format = ft
+yard.variants = yard,yards,yd,yd.
+yard.format = yd
+point.variants = point,points,pt,pt.
+point.format = pt
+cable.variants = cable,cables
+cable.format = cable
+league.variants = league,leagues
+league.format = league
+furlong.variants = furlong,furlongs
+furlong.format = furlong
+nautical_mile.variants = nmi,nautical mile,nautical miles,n.m.
+nautical_mile.format = n.m.
+chain.variants = chain,chains
+chain.format = chain
+
+[area]
+ping.variants = ping,píng,pings,píngs
+ping.format = píng
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,%@ 2
+area.format = %@²
+acre.variants = acre,acres
+acre.format = acre
+hectare.variants = hectare,hectares,ha
+hectare.format = ha
+are.variants = a,are,ares
+are.format = a
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,%@ 3
+volume.format = %@³
+litre.variants = litre,litres,liter,liters,l,L
+litre.format = L
+litre.symbol = l
+cup.variants = cup,cups
+cup.format = cup
+tablespoon.variants = tablespoon,tablespoons,table spoon,table spoons,tbsp.,tbsp,T.
+tablespoon.format = tbsp.
+teaspoon.variants = teaspoon,teaspoons,tea spoon,tea spoons,t.,tsp.,tsp
+teaspoon.format = tsp.
+quart.variants = quart,quarts,qt.,qt
+quart.format = qt.
+pint.variants = pint,pints
+pint.format = pint
+gallon.variants = gallon,gallons,gal.,gal
+gallon.format = gal.
+cbinch.variants = c.i.,CI,cui,cu inch
+cbcm.variants = cc,ccm
+
+[weight]
+gram.variants = gram,gramme,grams,grammes,g
+gram.format = g
+gram.symbol = g
+tonne.variants = tonne,tonnes,t,metric ton
+tonne.format = t
+tonne.symbol = t
+stone.variants = stone,stones,st
+stone.format = st
+carat.variants = carat,carats,CD,ct
+carat.format = ct
+pound.variants = pound,pounds,lb,lbm
+pound.format = lb
+centner.variants = centner,quintal,centners,quintals
+centner.format = centner
+ounce.variants = ounce,ounces,oz
+ounce.format = oz
+
+[time]
+second.variants = s,sec,second,seconds
+second.format = s
+second.symbol = s
+minute.variants = min,minute,minutes
+minute.format = min
+hour.variants = h,hr,hour,hours
+hour.format = h
+day.variants = day,days,d
+day.format = day
+week.variants = week,w,weeks
+week.format = w
+month.variants = month,monthes,months,mon,mon.
+month.format = mon.
+year.variants = y,yr,year,years
+year.format = yr
+
+[angle]
+radian.variants = radian,rad,radians
+radian.format = rad
+degree.variants = degree,°,degrees,arcdegree
+degree.format = °
+
+[temperature]
+celsius.variants = celsius,C,°C
+celsius.format = °C
+fahrenheit.variants = fahrenheit,fahrenheits,F,°F
+fahrenheit.format = °F
+kelvin.variants = kelvin,kelvins,K
+kelvin.format = K
+
+[data]
+bit.variants = bit,bits,b
+bit.format = b
+bit.symbol = b
+byte.variants = byte,bytes,B
+byte.format = B
+byte.symbol = B
+
+[css]
+pixel.variants = pixel,pixels,px,px.
+pixel.format = px
+em.variants = em,ems
+em.format = em
+
+[siprefixes]
+exa.prefix = exa
+exa.symbol = E
+pico.prefix = pico
+pico.symbol = p
+nano.prefix = nano
+nano.symbol = n
+femto.prefix = femto
+femto.symbol = f
+micro.prefix = micro
+micro.symbol = µ
+mega.prefix = mega
+mega.symbol = M
+kilo.prefix = kilo
+kilo.symbol = k
+zepto.prefix = zepto
+zepto.symbol = z
+deci.prefix = deci
+deci.symbol = d
+zetta.prefix = zetta
+zetta.symbol = Z
+atto.prefix = atto
+atto.symbol = a
+tera.prefix = tera
+tera.symbol = T
+milli.prefix = milli
+milli.symbol = m
+centi.prefix = centi
+centi.symbol = c
+yotta.prefix = yotta
+yotta.symbol = Y
+giga.prefix = giga
+giga.symbol = G
+peta.prefix = peta
+peta.symbol = P
+yocto.prefix = yocto
+yocto.symbol = y
+deca.prefix = deca
+deca.symbol = da
+hecto.prefix = hecto
+hecto.symbol = h
+
+[iecprefixes]
+gibi.prefix = gibi
+gibi.symbol = Gi
+kibi.prefix = kibi
+kibi.symbol = Ki
+zebi.prefix = zebi
+zebi.symbol = Zi
+yobi.prefix = yobi
+yobi.symbol = Yi
+mebi.prefix = mebi
+mebi.symbol = Mi
+pebi.prefix = pebi
+pebi.symbol = Pi
+tebi.prefix = tebi
+tebi.symbol = Ti
+exbi.prefix = exbi
+exbi.symbol = Ei
+
+[scales]
+thousand.variants = thousand,Thousand,thousands,Thousands,th.,th,k
+million.variants = million,Million,millions,Millions,M
+billion.variants = billion,Billion,milliard,Milliard,billions,Billions,milliards,Milliards
+
+[percent]
+percent.variants = %,percent,percents,pct,pct.
+percent.format = %%
+percent_of.variants = from,of
+percent_off.variants = off
+percent_on.variants = on
+as_a_percent_of.variants = as a % of,as a percent of
+as_a_percent_off.variants = as a % off,as a percent off,as a % decrease of,as a percent decrease of
+as_a_percent_on.variants = as a % on,as a percent on,as a % increase of,as a percent increase of
+percent_of_what_is.variants = of what is
+percent_off_what_is.variants = off what is
+percent_on_what_is.variants = on what is
+
+[operations]
+assignment.variants = equal,is
+conversion.variants = in,into,as,to
+plus.variants = with,plus,and
+minus.variants = minus,without,subtract
+multiply.variants = times,multiplied by,multiply,mul,mult
+divide.variants = divide,divide by,divided by
+sum.variants = sum,total
+avg.variants = average,avg
+prev.variants = prev
+sqrt.variants = sqrt,square root
+cbrt.variants = cbrt,cubic root,cube root,cubed root
+
+[numbers]
+hex.variants = hex
+binary.variants = binary,bin
+octal.variants = octal
+decimal.variants = decimal,dec
+scientific.variants = scientific, sci, exp, exponent, exponential
+
+[dates]
+today.variants = today
+tomorrow.variants = tomorrow
+yesterday.variants = yesterday
+local_time.variants = local,local timezone,local time zone
+current_time.variants = time,now

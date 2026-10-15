@@ -1,0 +1,617 @@
+# City -> IANA time zone. Format: City<TAB>Area/Zone. '#' lines are comments.
+# --- Europe ---
+London	Europe/London
+Edinburgh	Europe/London
+Glasgow	Europe/London
+Manchester	Europe/London
+Birmingham	Europe/London
+Liverpool	Europe/London
+Leeds	Europe/London
+Cardiff	Europe/London
+Belfast	Europe/London
+Dublin	Europe/Dublin
+Cork	Europe/Dublin
+Paris	Europe/Paris
+Lyon	Europe/Paris
+Marseille	Europe/Paris
+Toulouse	Europe/Paris
+Nice	Europe/Paris
+Monaco	Europe/Monaco
+Berlin	Europe/Berlin
+Munich	Europe/Berlin
+München	Europe/Berlin
+Hamburg	Europe/Berlin
+Frankfurt	Europe/Berlin
+Cologne	Europe/Berlin
+Köln	Europe/Berlin
+Stuttgart	Europe/Berlin
+Düsseldorf	Europe/Berlin
+Dortmund	Europe/Berlin
+Essen	Europe/Berlin
+Leipzig	Europe/Berlin
+Dresden	Europe/Berlin
+Nuremberg	Europe/Berlin
+Hanover	Europe/Berlin
+Bremen	Europe/Berlin
+Madrid	Europe/Madrid
+Barcelona	Europe/Madrid
+Valencia	Europe/Madrid
+Seville	Europe/Madrid
+Bilbao	Europe/Madrid
+Zaragoza	Europe/Madrid
+Málaga	Europe/Madrid
+Malaga	Europe/Madrid
+Las Palmas	Atlantic/Canary
+Lisbon	Europe/Lisbon
+Porto	Europe/Lisbon
+Ponta Delgada	Atlantic/Azores
+Rome	Europe/Rome
+Milan	Europe/Rome
+Naples	Europe/Rome
+Turin	Europe/Rome
+Florence	Europe/Rome
+Venice	Europe/Rome
+Bologna	Europe/Rome
+Genoa	Europe/Rome
+Palermo	Europe/Rome
+Vatican City	Europe/Rome
+San Marino	Europe/Rome
+Valletta	Europe/Malta
+Andorra la Vella	Europe/Andorra
+Gibraltar	Europe/Gibraltar
+Amsterdam	Europe/Amsterdam
+Rotterdam	Europe/Amsterdam
+The Hague	Europe/Amsterdam
+Utrecht	Europe/Amsterdam
+Brussels	Europe/Brussels
+Antwerp	Europe/Brussels
+Luxembourg	Europe/Luxembourg
+Vienna	Europe/Vienna
+Graz	Europe/Vienna
+Zurich	Europe/Zurich
+Zürich	Europe/Zurich
+Geneva	Europe/Zurich
+Basel	Europe/Zurich
+Bern	Europe/Zurich
+Vaduz	Europe/Vaduz
+Stockholm	Europe/Stockholm
+Gothenburg	Europe/Stockholm
+Malmö	Europe/Stockholm
+Oslo	Europe/Oslo
+Bergen	Europe/Oslo
+Copenhagen	Europe/Copenhagen
+Aarhus	Europe/Copenhagen
+Helsinki	Europe/Helsinki
+Reykjavik	Atlantic/Reykjavik
+Reykjavík	Atlantic/Reykjavik
+Tallinn	Europe/Tallinn
+Riga	Europe/Riga
+Vilnius	Europe/Vilnius
+Warsaw	Europe/Warsaw
+Krakow	Europe/Warsaw
+Kraków	Europe/Warsaw
+Wroclaw	Europe/Warsaw
+Wrocław	Europe/Warsaw
+Gdansk	Europe/Warsaw
+Gdańsk	Europe/Warsaw
+Poznan	Europe/Warsaw
+Prague	Europe/Prague
+Brno	Europe/Prague
+Bratislava	Europe/Bratislava
+Budapest	Europe/Budapest
+Bucharest	Europe/Bucharest
+Cluj-Napoca	Europe/Bucharest
+Sofia	Europe/Sofia
+Athens	Europe/Athens
+Thessaloniki	Europe/Athens
+Belgrade	Europe/Belgrade
+Pristina	Europe/Belgrade
+Zagreb	Europe/Zagreb
+Ljubljana	Europe/Ljubljana
+Sarajevo	Europe/Sarajevo
+Skopje	Europe/Skopje
+Podgorica	Europe/Podgorica
+Tirana	Europe/Belgrade
+Chisinau	Europe/Chisinau
+Chișinău	Europe/Chisinau
+Kyiv	Europe/Kyiv
+Kiev	Europe/Kyiv
+Kharkiv	Europe/Kyiv
+Odesa	Europe/Kyiv
+Odessa	Europe/Kyiv
+Dnipro	Europe/Kyiv
+Lviv	Europe/Kyiv
+Minsk	Europe/Minsk
+Moscow	Europe/Moscow
+St Petersburg	Europe/Moscow
+St. Petersburg	Europe/Moscow
+Saint Petersburg	Europe/Moscow
+Kaliningrad	Europe/Kaliningrad
+Kazan	Europe/Moscow
+Nizhny Novgorod	Europe/Moscow
+Rostov-on-Don	Europe/Moscow
+Krasnodar	Europe/Moscow
+Sochi	Europe/Moscow
+Murmansk	Europe/Moscow
+Voronezh	Europe/Moscow
+Volgograd	Europe/Volgograd
+Saratov	Europe/Saratov
+Ulyanovsk	Europe/Ulyanovsk
+Samara	Europe/Samara
+Yekaterinburg	Asia/Yekaterinburg
+Chelyabinsk	Asia/Yekaterinburg
+Ufa	Asia/Yekaterinburg
+Perm	Asia/Yekaterinburg
+Omsk	Asia/Omsk
+Novosibirsk	Asia/Novosibirsk
+Barnaul	Asia/Barnaul
+Tomsk	Asia/Tomsk
+Krasnoyarsk	Asia/Krasnoyarsk
+Irkutsk	Asia/Irkutsk
+Chita	Asia/Chita
+Yakutsk	Asia/Yakutsk
+Vladivostok	Asia/Vladivostok
+Khabarovsk	Asia/Vladivostok
+Yuzhno-Sakhalinsk	Asia/Sakhalin
+Magadan	Asia/Magadan
+Petropavlovsk-Kamchatsky	Asia/Kamchatka
+Istanbul	Europe/Istanbul
+Ankara	Europe/Istanbul
+Izmir	Europe/Istanbul
+Bursa	Europe/Istanbul
+Nicosia	Asia/Nicosia
+# --- Africa ---
+Cairo	Africa/Cairo
+Alexandria	Africa/Cairo
+Giza	Africa/Cairo
+Lagos	Africa/Lagos
+Abuja	Africa/Lagos
+Kano	Africa/Lagos
+Ibadan	Africa/Lagos
+Kinshasa	Africa/Kinshasa
+Lubumbashi	Africa/Lubumbashi
+Johannesburg	Africa/Johannesburg
+Pretoria	Africa/Johannesburg
+Cape Town	Africa/Johannesburg
+Durban	Africa/Johannesburg
+Nairobi	Africa/Nairobi
+Mombasa	Africa/Nairobi
+Addis Ababa	Africa/Addis_Ababa
+Dar es Salaam	Africa/Dar_es_Salaam
+Dodoma	Africa/Dar_es_Salaam
+Khartoum	Africa/Khartoum
+Juba	Africa/Juba
+Algiers	Africa/Algiers
+Tunis	Africa/Tunis
+Tripoli	Africa/Tripoli
+Rabat	Africa/Casablanca
+Casablanca	Africa/Casablanca
+Marrakesh	Africa/Casablanca
+Accra	Africa/Accra
+Abidjan	Africa/Abidjan
+Yamoussoukro	Africa/Abidjan
+Dakar	Africa/Dakar
+Bamako	Africa/Bamako
+Ouagadougou	Africa/Ouagadougou
+Niamey	Africa/Niamey
+N'Djamena	Africa/Ndjamena
+Yaoundé	Africa/Douala
+Yaounde	Africa/Douala
+Douala	Africa/Douala
+Libreville	Africa/Libreville
+Brazzaville	Africa/Brazzaville
+Bangui	Africa/Bangui
+Malabo	Africa/Malabo
+São Tomé	Africa/Sao_Tome
+Sao Tome	Africa/Sao_Tome
+Luanda	Africa/Luanda
+Lusaka	Africa/Lusaka
+Harare	Africa/Harare
+Maputo	Africa/Maputo
+Lilongwe	Africa/Blantyre
+Windhoek	Africa/Windhoek
+Gaborone	Africa/Gaborone
+Maseru	Africa/Maseru
+Mbabane	Africa/Mbabane
+Antananarivo	Indian/Antananarivo
+Port Louis	Indian/Mauritius
+Victoria	Indian/Mahe
+Moroni	Indian/Comoro
+Kampala	Africa/Kampala
+Kigali	Africa/Kigali
+Bujumbura	Africa/Bujumbura
+Mogadishu	Africa/Mogadishu
+Djibouti	Africa/Djibouti
+Asmara	Africa/Asmara
+Conakry	Africa/Conakry
+Freetown	Africa/Freetown
+Monrovia	Africa/Monrovia
+Banjul	Africa/Banjul
+Bissau	Africa/Bissau
+Praia	Atlantic/Cape_Verde
+Nouakchott	Africa/Nouakchott
+Lomé	Africa/Lome
+Lome	Africa/Lome
+Porto-Novo	Africa/Porto-Novo
+Cotonou	Africa/Porto-Novo
+# --- Middle East & Central Asia ---
+Jerusalem	Asia/Jerusalem
+Tel Aviv	Asia/Jerusalem
+Haifa	Asia/Jerusalem
+Amman	Asia/Amman
+Damascus	Asia/Damascus
+Beirut	Asia/Beirut
+Baghdad	Asia/Baghdad
+Basra	Asia/Baghdad
+Erbil	Asia/Baghdad
+Tehran	Asia/Tehran
+Mashhad	Asia/Tehran
+Isfahan	Asia/Tehran
+Kuwait City	Asia/Kuwait
+Riyadh	Asia/Riyadh
+Jeddah	Asia/Riyadh
+Mecca	Asia/Riyadh
+Medina	Asia/Riyadh
+Dammam	Asia/Riyadh
+Doha	Asia/Qatar
+Manama	Asia/Bahrain
+Abu Dhabi	Asia/Dubai
+Dubai	Asia/Dubai
+Sharjah	Asia/Dubai
+Muscat	Asia/Muscat
+Sanaa	Asia/Aden
+Sana'a	Asia/Aden
+Aden	Asia/Aden
+Baku	Asia/Baku
+Tbilisi	Asia/Tbilisi
+Yerevan	Asia/Yerevan
+Tashkent	Asia/Tashkent
+Samarkand	Asia/Samarkand
+Bishkek	Asia/Bishkek
+Dushanbe	Asia/Dushanbe
+Ashgabat	Asia/Ashgabat
+Kabul	Asia/Kabul
+Astana	Asia/Almaty
+Almaty	Asia/Almaty
+Shymkent	Asia/Almaty
+Aktau	Asia/Aqtau
+Aktobe	Asia/Aqtobe
+Atyrau	Asia/Atyrau
+Oral	Asia/Oral
+# --- South Asia ---
+Delhi	Asia/Kolkata
+New Delhi	Asia/Kolkata
+Mumbai	Asia/Kolkata
+Bombay	Asia/Kolkata
+Kolkata	Asia/Kolkata
+Calcutta	Asia/Kolkata
+Chennai	Asia/Kolkata
+Madras	Asia/Kolkata
+Bangalore	Asia/Kolkata
+Bengaluru	Asia/Kolkata
+Hyderabad	Asia/Kolkata
+Ahmedabad	Asia/Kolkata
+Pune	Asia/Kolkata
+Surat	Asia/Kolkata
+Jaipur	Asia/Kolkata
+Lucknow	Asia/Kolkata
+Kanpur	Asia/Kolkata
+Nagpur	Asia/Kolkata
+Indore	Asia/Kolkata
+Bhopal	Asia/Kolkata
+Patna	Asia/Kolkata
+Vadodara	Asia/Kolkata
+Visakhapatnam	Asia/Kolkata
+Chandigarh	Asia/Kolkata
+Coimbatore	Asia/Kolkata
+Kochi	Asia/Kolkata
+Thiruvananthapuram	Asia/Kolkata
+Goa	Asia/Kolkata
+Karachi	Asia/Karachi
+Lahore	Asia/Karachi
+Islamabad	Asia/Karachi
+Faisalabad	Asia/Karachi
+Rawalpindi	Asia/Karachi
+Dhaka	Asia/Dhaka
+Chittagong	Asia/Dhaka
+Colombo	Asia/Colombo
+Sri Jayawardenepura Kotte	Asia/Colombo
+Kathmandu	Asia/Kathmandu
+Thimphu	Asia/Thimphu
+Malé	Indian/Maldives
+Male	Indian/Maldives
+# --- East & Southeast Asia ---
+Tokyo	Asia/Tokyo
+Osaka	Asia/Tokyo
+Kyoto	Asia/Tokyo
+Yokohama	Asia/Tokyo
+Nagoya	Asia/Tokyo
+Sapporo	Asia/Tokyo
+Fukuoka	Asia/Tokyo
+Kobe	Asia/Tokyo
+Hiroshima	Asia/Tokyo
+Seoul	Asia/Seoul
+Busan	Asia/Seoul
+Incheon	Asia/Seoul
+Pyongyang	Asia/Pyongyang
+Beijing	Asia/Shanghai
+Peking	Asia/Shanghai
+Shanghai	Asia/Shanghai
+Guangzhou	Asia/Shanghai
+Shenzhen	Asia/Shanghai
+Chengdu	Asia/Shanghai
+Chongqing	Asia/Shanghai
+Tianjin	Asia/Shanghai
+Wuhan	Asia/Shanghai
+Xi'an	Asia/Shanghai
+Hangzhou	Asia/Shanghai
+Nanjing	Asia/Shanghai
+Shenyang	Asia/Shanghai
+Harbin	Asia/Shanghai
+Qingdao	Asia/Shanghai
+Dalian	Asia/Shanghai
+Zhengzhou	Asia/Shanghai
+Changsha	Asia/Shanghai
+Kunming	Asia/Shanghai
+Suzhou	Asia/Shanghai
+Dongguan	Asia/Shanghai
+Foshan	Asia/Shanghai
+Jinan	Asia/Shanghai
+Hefei	Asia/Shanghai
+Xiamen	Asia/Shanghai
+Lhasa	Asia/Shanghai
+Urumqi	Asia/Urumqi
+Hong Kong	Asia/Hong_Kong
+Macau	Asia/Macau
+Taipei	Asia/Taipei
+Kaohsiung	Asia/Taipei
+Ulaanbaatar	Asia/Ulaanbaatar
+Singapore	Asia/Singapore
+Kuala Lumpur	Asia/Kuala_Lumpur
+Putrajaya	Asia/Kuala_Lumpur
+Johor Bahru	Asia/Kuala_Lumpur
+George Town	Asia/Kuala_Lumpur
+Kuching	Asia/Kuching
+Kota Kinabalu	Asia/Kuching
+Bandar Seri Begawan	Asia/Brunei
+Bangkok	Asia/Bangkok
+Chiang Mai	Asia/Bangkok
+Phuket	Asia/Bangkok
+Phnom Penh	Asia/Phnom_Penh
+Vientiane	Asia/Vientiane
+Hanoi	Asia/Ho_Chi_Minh
+Ho Chi Minh City	Asia/Ho_Chi_Minh
+Saigon	Asia/Ho_Chi_Minh
+Da Nang	Asia/Ho_Chi_Minh
+Yangon	Asia/Yangon
+Rangoon	Asia/Yangon
+Naypyidaw	Asia/Yangon
+Mandalay	Asia/Yangon
+Manila	Asia/Manila
+Quezon City	Asia/Manila
+Cebu	Asia/Manila
+Davao	Asia/Manila
+Jakarta	Asia/Jakarta
+Surabaya	Asia/Jakarta
+Bandung	Asia/Jakarta
+Medan	Asia/Jakarta
+Semarang	Asia/Jakarta
+Palembang	Asia/Jakarta
+Yogyakarta	Asia/Jakarta
+Pontianak	Asia/Pontianak
+Makassar	Asia/Makassar
+Denpasar	Asia/Makassar
+Balikpapan	Asia/Makassar
+Jayapura	Asia/Jayapura
+Dili	Asia/Dili
+# --- Oceania ---
+Sydney	Australia/Sydney
+Canberra	Australia/Sydney
+Newcastle	Australia/Sydney
+Melbourne	Australia/Melbourne
+Brisbane	Australia/Brisbane
+Gold Coast	Australia/Brisbane
+Cairns	Australia/Brisbane
+Perth	Australia/Perth
+Adelaide	Australia/Adelaide
+Hobart	Australia/Hobart
+Darwin	Australia/Darwin
+Alice Springs	Australia/Darwin
+Auckland	Pacific/Auckland
+Wellington	Pacific/Auckland
+Christchurch	Pacific/Auckland
+Suva	Pacific/Fiji
+Port Moresby	Pacific/Port_Moresby
+Honiara	Pacific/Guadalcanal
+Port Vila	Pacific/Efate
+Nouméa	Pacific/Noumea
+Noumea	Pacific/Noumea
+Apia	Pacific/Apia
+Nuku'alofa	Pacific/Tongatapu
+Tarawa	Pacific/Tarawa
+Majuro	Pacific/Majuro
+Palikir	Pacific/Pohnpei
+Ngerulmud	Pacific/Palau
+Koror	Pacific/Palau
+Funafuti	Pacific/Funafuti
+Yaren	Pacific/Nauru
+Guam	Pacific/Guam
+Papeete	Pacific/Tahiti
+Pago Pago	Pacific/Pago_Pago
+Honolulu	Pacific/Honolulu
+# --- United States ---
+New York	America/New_York
+New York City	America/New_York
+NYC	America/New_York
+Boston	America/New_York
+Philadelphia	America/New_York
+Washington	America/New_York
+Washington DC	America/New_York
+Washington D.C.	America/New_York
+DC	America/New_York
+Atlanta	America/New_York
+Miami	America/New_York
+Orlando	America/New_York
+Tampa	America/New_York
+Jacksonville	America/New_York
+Charlotte	America/New_York
+Raleigh	America/New_York
+Pittsburgh	America/New_York
+Baltimore	America/New_York
+Cleveland	America/New_York
+Columbus	America/New_York
+Cincinnati	America/New_York
+Detroit	America/Detroit
+Buffalo	America/New_York
+Richmond	America/New_York
+Newark	America/New_York
+Providence	America/New_York
+Hartford	America/New_York
+Charleston	America/New_York
+Indianapolis	America/Indiana/Indianapolis
+Louisville	America/Kentucky/Louisville
+Chicago	America/Chicago
+Houston	America/Chicago
+Dallas	America/Chicago
+Austin	America/Chicago
+San Antonio	America/Chicago
+Fort Worth	America/Chicago
+Minneapolis	America/Chicago
+St. Louis	America/Chicago
+St Louis	America/Chicago
+Kansas City	America/Chicago
+Milwaukee	America/Chicago
+Nashville	America/Chicago
+Memphis	America/Chicago
+New Orleans	America/Chicago
+Oklahoma City	America/Chicago
+Omaha	America/Chicago
+Denver	America/Denver
+Salt Lake City	America/Denver
+Albuquerque	America/Denver
+El Paso	America/Denver
+Boise	America/Boise
+Phoenix	America/Phoenix
+Tucson	America/Phoenix
+Los Angeles	America/Los_Angeles
+LA	America/Los_Angeles
+San Diego	America/Los_Angeles
+San Jose	America/Los_Angeles
+San Francisco	America/Los_Angeles
+SF	America/Los_Angeles
+Sacramento	America/Los_Angeles
+Oakland	America/Los_Angeles
+Las Vegas	America/Los_Angeles
+Seattle	America/Los_Angeles
+Portland	America/Los_Angeles
+Anchorage	America/Anchorage
+Fairbanks	America/Anchorage
+San Juan	America/Puerto_Rico
+# --- Canada ---
+Toronto	America/Toronto
+Ottawa	America/Toronto
+Montreal	America/Toronto
+Montréal	America/Toronto
+Quebec City	America/Toronto
+Mississauga	America/Toronto
+Kitchener	America/Toronto
+Vancouver	America/Vancouver
+Calgary	America/Edmonton
+Edmonton	America/Edmonton
+Yellowknife	America/Edmonton
+Winnipeg	America/Winnipeg
+Regina	America/Regina
+Saskatoon	America/Regina
+Halifax	America/Halifax
+St. John's	America/St_Johns
+Whitehorse	America/Whitehorse
+Iqaluit	America/Iqaluit
+# --- Mexico, Central America, Caribbean ---
+Mexico City	America/Mexico_City
+Guadalajara	America/Mexico_City
+Monterrey	America/Monterrey
+Puebla	America/Mexico_City
+León	America/Mexico_City
+Querétaro	America/Mexico_City
+Mérida	America/Merida
+Cancún	America/Cancun
+Cancun	America/Cancun
+Tijuana	America/Tijuana
+Chihuahua	America/Chihuahua
+Hermosillo	America/Hermosillo
+Mazatlán	America/Mazatlan
+Guatemala City	America/Guatemala
+Belmopan	America/Belize
+San Salvador	America/El_Salvador
+Tegucigalpa	America/Tegucigalpa
+Managua	America/Managua
+San José Costa Rica	America/Costa_Rica
+Panama City	America/Panama
+Havana	America/Havana
+Kingston	America/Jamaica
+Port-au-Prince	America/Port-au-Prince
+Santo Domingo	America/Santo_Domingo
+Nassau	America/Nassau
+Bridgetown	America/Barbados
+Port of Spain	America/Port_of_Spain
+Castries	America/St_Lucia
+Kingstown	America/St_Vincent
+Roseau	America/Dominica
+Basseterre	America/St_Kitts
+St. John's Antigua	America/Antigua
+St. George's	America/Grenada
+Hamilton	Atlantic/Bermuda
+# --- South America ---
+Bogotá	America/Bogota
+Bogota	America/Bogota
+Medellín	America/Bogota
+Medellin	America/Bogota
+Cali	America/Bogota
+Lima	America/Lima
+Quito	America/Guayaquil
+Guayaquil	America/Guayaquil
+Caracas	America/Caracas
+La Paz	America/La_Paz
+Sucre	America/La_Paz
+Asunción	America/Asuncion
+Asuncion	America/Asuncion
+Montevideo	America/Montevideo
+Buenos Aires	America/Argentina/Buenos_Aires
+Córdoba	America/Argentina/Cordoba
+Cordoba	America/Argentina/Cordoba
+Rosario	America/Argentina/Cordoba
+Mendoza	America/Argentina/Mendoza
+Santiago	America/Santiago
+Valparaíso	America/Santiago
+Valparaiso	America/Santiago
+Brasília	America/Sao_Paulo
+Brasilia	America/Sao_Paulo
+São Paulo	America/Sao_Paulo
+Sao Paulo	America/Sao_Paulo
+Rio de Janeiro	America/Sao_Paulo
+Belo Horizonte	America/Sao_Paulo
+Curitiba	America/Sao_Paulo
+Porto Alegre	America/Sao_Paulo
+Campinas	America/Sao_Paulo
+Goiânia	America/Sao_Paulo
+Goiania	America/Sao_Paulo
+Florianópolis	America/Sao_Paulo
+Florianopolis	America/Sao_Paulo
+Salvador	America/Bahia
+Fortaleza	America/Fortaleza
+Natal	America/Fortaleza
+Recife	America/Recife
+Maceió	America/Maceio
+Belém	America/Belem
+Belem	America/Belem
+Manaus	America/Manaus
+Cuiabá	America/Cuiaba
+Cuiaba	America/Cuiaba
+Campo Grande	America/Campo_Grande
+Porto Velho	America/Porto_Velho
+Boa Vista	America/Boa_Vista
+Rio Branco	America/Rio_Branco
+Georgetown	America/Guyana
+Paramaribo	America/Paramaribo
+Cayenne	America/Cayenne
+Stanley	Atlantic/Stanley

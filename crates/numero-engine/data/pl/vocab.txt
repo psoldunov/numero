@@ -1,0 +1,130 @@
+# pl phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = radians,radian,rad,radiany,radianów
+degree.variants = stopień,stopnie,stopni
+
+[area]
+ping.variants = ping,píng,pingi,píngi,pingów,píngów
+area.templates = square %@,sq %@,sq%@,%@²,%@ ²,kwadratowe %@,kw. %@,kw%@,%@²,%@ ²,kwadratowy %@,%@ kw.
+acre.variants = acre,acres,akr,akry,akrów
+acre.format = akr
+hectare.variants = hektar,hektary,hektarów
+are.variants = a,are,ares,ar,ary,arów
+
+[css]
+pixel.variants = piksel,piksele,pixele,pikseli,pixeli
+em.variants = em,ems,emy, emów
+
+[data]
+bit.variants = bity,bitów
+byte.variants = bajt,baty,bajtów
+
+[dates]
+today.variants = dzisiaj
+tomorrow.variants = jutro
+yesterday.variants = wczoraj
+current_time.variants = teraz
+
+[iecprefixes]
+yobi.prefix = jobi
+exbi.prefix = eksbi
+
+[length]
+meter.variants = metr,metry,metrów
+inch.variants = cal,cale,cali,'
+mile.variants = mila,mil
+mile.format = mil
+foot.variants = stopa,stopy,stop,st.
+foot.format = stop.
+yard.variants = jard,jardy,jardów,jar.,jar
+point.variants = punkt,punkty,punktów,pkt,pkt.
+point.format = pkt
+cable.variants = kabel,kable,kabli
+cable.format = kab.
+league.variants = liga,liga lądowa,ligi,lig,ligi lądowe,lig lądowych
+league.format = lig lądowych
+furlong.variants = furling,furlongi,furlongów
+furlong.format = furl.
+
+[operations]
+assignment.variants = równa się, to
+conversion.variants = w,jako,do,na
+plus.variants = z,dodac,dodać,i
+minus.variants = minus,odejmij,różnica
+multiply.variants = razy,mnożone,mnożone przez,przemnożone,przemnożone przez,mnóż
+divide.variants = podziel,dzielone,dzielone przez,podzielone przez,przez,podzielić przez podzielic przez
+sum.variants = suma
+avg.variants = średnia,srednia
+sqrt.variants = pierwiastek kwadratowy z,pierwiastek z,pierwiastek kwadratowy,pierwiastek
+cbrt.variants = pierwiastek sześcienny,pierwiastek szescienny z,pierwiastek sześcienny z
+
+[percent]
+percent.variants = procent,procenty,procentów,proc.,prc.
+percent_of.variants = z,procent,procenty
+percent_off.variants = od
+percent_on.variants = do
+as_a_percent_of.variants = jako % z,jako procent z
+as_a_percent_off.variants = jako % od,jako procent od,jako % zmniejszenia z,jako procent zmniejszenia z
+as_a_percent_on.variants = jako procent do,jako % do,jako % wzrostu do,jako procent wzrostu do,jako % zwiększenia,jako procent zwiększenia
+percent_of_what_is.variants = którego jest
+percent_off_what_is.variants = po odjęciu to
+percent_on_what_is.variants = procent wzrostu
+
+[siprefixes]
+exa.prefix = eksa
+pico.prefix = piko
+micro.prefix = mikro
+deci.prefix = decy
+milli.prefix = mili
+centi.prefix = centy
+yotta.prefix = jotta
+yocto.prefix = jokto
+deca.prefix = deka
+hecto.prefix = hekto
+
+[scales]
+thousand.variants = tysiąc,tysiące,tysięcy,Tysiąc,Tysiące,Tysięcy,tys
+million.variants = milion,miliony,milionów,Milion,Miliony,Milionów,mln
+billion.variants = miliard,miliardy,miliardów,Miliard,Miliardy,Miliardów,mld
+
+[temperature]
+celsius.variants = celsiusz,celsiusza
+fahrenheit.variants = farenhait,Farenhait,farenhaitów
+kelvin.variants = klein,Kelwin,kelwiny,Kelwiny,kelwinów,Kelwinów
+
+[time]
+second.variants = sek,sek.,sekunda,sekund,sekundy
+minute.variants = min.,minut,minuty
+hour.variants = godzina,godzin,godziny
+day.variants = dzień,dni
+day.format = dzień
+week.variants = t,tydz.,tydzień,tygodnie,tygodni
+week.format = tyg.
+month.variants = miesiąc,miesiące,miesięcy
+month.format = mies.
+year.variants = rok,lat,lata,r
+year.format = r
+
+[volume]
+volume.templates = cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³,%@ sześć.,%@ sześć
+litre.variants = litr,litry,litrów
+litre.format = l
+cup.variants = łyżka,łyżki,łyżek
+cup.format = łyżka
+tablespoon.variants = łyżka stołowa,łyżki stołowe,łyżek stołowych,łyż,łyż.,łyżk.,łstoł,łstoł.,ł. stoł.
+tablespoon.format = ł. stoł.
+quart.variants = kwarta,kwarty,kwart,kwar.,kwart.
+quart.format = kwart.
+pint.variants = półkwarta,półkwarty,półkwart,pinty,pinta
+pint.format = kwart.
+gallon.variants = galon,galony,galonów
+
+[weight]
+gram.variants = gramy,gramów
+tonne.variants = tona,tony,ton
+stone.variants = kamień,kamienie,kamieni,kam,kam.
+stone.format = kam.
+carat.variants = karat,karaty,karatów,kar
+carat.format = car
+pound.variants = funt,funty,fnt
+pound.format = fnt

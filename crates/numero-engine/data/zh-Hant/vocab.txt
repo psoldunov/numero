@@ -1,0 +1,114 @@
+# zh-Hant phrase tables, same format as data/en. English is always merged in.
+[angle]
+radian.variants = 弧度
+degree.variants = 度
+
+[area]
+area.templates = 平方%@,square %@,sq %@,sq%@,%@²,%@ ²
+acre.variants = 英畝
+hectare.variants = 公頃
+are.variants = 公畝
+
+[css]
+pixel.variants = 像素
+em.variants = 艾米
+
+[data]
+bit.variants = 位元
+byte.variants = 位元組
+
+[dates]
+today.variants = 今天
+tomorrow.variants = 明天
+yesterday.variants = 昨天
+local_time.variants = 本地時區,local,local timezone,local time zone
+current_time.variants = 時間,time,now
+
+[length]
+meter.variants = 米,公尺
+inch.variants = 英吋
+mile.variants = 英哩
+foot.variants = 英呎
+yard.variants = 碼
+point.variants = 點
+cable.variants = 纜
+league.variants = 里格
+furlong.variants = 浪
+nautical_mile.variants = 海里
+chain.variants = 鏈
+
+[operations]
+conversion.variants = 換成,換算,兌換,兌換成,折算,折算成
+plus.variants = 加,加上
+minus.variants = 減,減掉
+multiply.variants = 乘,乘以
+divide.variants = 除,除以
+sum.variants = 合計,總計
+avg.variants = 平均
+prev.variants = 上面答案
+sqrt.variants = 平方根
+cbrt.variants = 立方根
+
+[percent]
+percent.variants = 百分比
+
+[siprefixes]
+exa.prefix = 艾
+pico.prefix = 皮
+nano.prefix = 奈
+femto.prefix = 飛
+micro.prefix = 微
+mega.prefix = 兆
+kilo.prefix = 千
+zepto.prefix = 介
+deci.prefix = 分
+zetta.prefix = 皆
+atto.prefix = 阿
+tera.prefix = 太
+milli.prefix = 毫
+centi.prefix = 厘
+yotta.prefix = 佑
+giga.prefix = 吉
+peta.prefix = 拍
+yocto.prefix = 攸
+deca.prefix = 十
+hecto.prefix = 百
+
+[scales]
+thousand.variants = 仟,千
+million.variants = 佰萬,百萬
+billion.variants = 拾億,十億
+
+[temperature]
+celsius.variants = 攝氏
+fahrenheit.variants = 華氏
+kelvin.variants = 蘭氏
+
+[time]
+second.variants = 秒
+minute.variants = 分
+hour.variants = 時,點
+day.variants = 天
+week.variants = 週,周
+month.variants = 月
+year.variants = 年
+
+[volume]
+volume.templates = 立方%@,cu %@,cubic %@,cb %@,cb%@,%@³,%@ ³
+litre.variants = 升,公升
+litre.symbol = L
+cup.variants = 杯
+tablespoon.variants = 湯匙
+teaspoon.variants = 茶匙
+quart.variants = 夸脫
+pint.variants = 品脫
+gallon.variants = 加侖
+
+[weight]
+gram.variants = 克,公克
+tonne.variants = 公噸
+stone.variants = 英石
+carat.variants = 克拉
+pound.variants = 磅
+centner.variants = 公擔
+ounce.variants = 盎司
