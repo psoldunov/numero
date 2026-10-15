@@ -1,23 +1,48 @@
-//! The UI's sans family: the desktop's own font, in the title bar, the
-//! popovers, the footer and the Preferences window. The calculator's text
-//! and results stay in the theme's mono family.
+//! The desktop's fonts in the app: its sans family and size for the title
+//! bar, the popovers, the footer and the Preferences window, and its
+//! monospace family for the calculator's text and results, which keep Numi's
+//! text sizes.
 //!
-//! macOS needs nothing: the theme's default `.SystemUIFont` is SF Pro there.
+//! macOS needs nothing: the theme's default `.SystemUIFont` is SF Pro there,
+//! at gpui-component's sizes, which follow AppKit's.
+//!
 //! On Linux GPUI maps `.SystemUIFont` to a family most desktops don't ship
-//! and draws its own fallback, so the UI wouldn't match the desktop. At start
-//! the theme takes, in order, the first installed family of:
+//! and draws its own fallback, and gpui-component's mono is a bundled pick,
+//! so neither would match the desktop. At start each [`Role`] takes the
+//! first of:
 //!
-//! 1. KDE's `font` in `kdeglobals` (read from disk, so the first frame
-//!    already has it);
-//! 2. fontconfig's `sans-serif`, resolved through GPUI's text system;
+//! 1. KDE's setting in `kdeglobals` (`font`, `fixed`), read from disk, so
+//!    the first frame already has it;
+//! 2. fontconfig's generic family (`sans-serif`, `monospace`), resolved
+//!    through GPUI's text system;
 //!
-//! and then the family the settings portal names in
-//! `org.gnome.desktop.interface` `font-name` (GNOME's and KDE's portals both
-//! answer it), once it answers.
+//! and then the font the settings portal names in
+//! `org.gnome.desktop.interface` (`font-name`, `monospace-font-name`; GNOME's
+//! and KDE's portals both answer it), once it answers. A family that isn't
+//! installed is skipped.
+//!
+//! The UI size goes on the theme's rem, which gpui-component's text and
+//! controls are measured in: labels are `text_sm`, 0.875 rem, so the rem is
+//! the desktop's text size over 0.875, and buttons and fields scale with it
+//! as they do in Qt and GTK.
 
 use gpui::App;
 
-/// Points the theme's UI family at the desktop's font.
+/// Pixels per point at the 96 dpi Linux desktops lay text out at; display
+/// scaling comes on top, in GPUI's logical pixels.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+const PX_PER_PT: f32 = 96. / 72.;
+
+/// `text_sm`, gpui-component's label size, in rems.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+const LABEL_REMS: f32 = 0.875;
+
+/// The desktop text sizes, in pixels, the UI follows; anything outside is
+/// clamped, so a broken setting can't make the UI unusable.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+const TEXT_PX: (f32, f32) = (10., 24.);
+
+/// Points the theme's fonts at the desktop's.
 #[cfg(target_os = "linux")]
 pub(crate) fn apply(cx: &mut App) {
     linux::apply(cx);
@@ -27,12 +52,69 @@ pub(crate) fn apply(cx: &mut App) {
 #[cfg(not(target_os = "linux"))]
 pub(crate) fn apply(_cx: &mut App) {}
 
-/// The family in a Pango font description, as GNOME writes `font-name`:
-/// `"Cantarell 11"`, `"SF Pro Display  10"`, `"Noto Sans Bold Italic 10"`,
-/// `"Inter, Noto Sans 11px"`. The size and the style words at the end go;
-/// of a family list, the first family stays.
+/// Which of the desktop's fonts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-fn family_from_pango(description: &str) -> Option<String> {
+enum Role {
+    /// The sans UI font: the theme's family and rem.
+    Ui,
+    /// The fixed-width font: the theme's mono family; sizes stay Numi's.
+    Mono,
+}
+
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+impl Role {
+    const ALL: [Self; 2] = [Self::Ui, Self::Mono];
+
+    /// Its key in the `[General]` group of `kdeglobals`.
+    fn kde_key(self) -> &'static str {
+        match self {
+            Self::Ui => "font",
+            Self::Mono => "fixed",
+        }
+    }
+
+    /// Its key in the portal's `org.gnome.desktop.interface`.
+    fn portal_key(self) -> &'static str {
+        match self {
+            Self::Ui => "font-name",
+            Self::Mono => "monospace-font-name",
+        }
+    }
+
+    /// Its fontconfig generic family.
+    fn generic_family(self) -> &'static str {
+        match self {
+            Self::Ui => "sans-serif",
+            Self::Mono => "monospace",
+        }
+    }
+}
+
+/// A desktop font: its family, and its text size in pixels when the setting
+/// gives one.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+struct DesktopFont {
+    family: String,
+    size_px: Option<f32>,
+}
+
+impl DesktopFont {
+    /// The theme rem that makes labels the desktop's text size.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    fn rem_px(&self) -> Option<f32> {
+        self.size_px
+            .map(|size| size.clamp(TEXT_PX.0, TEXT_PX.1) / LABEL_REMS)
+    }
+}
+
+/// A Pango font description, as GNOME writes `font-name`: `"Cantarell 11"`,
+/// `"SF Pro Display  10"`, `"Noto Sans Bold Italic 10"`, `"Inter, Noto Sans
+/// 11px"`. The size is points unless it ends in `px`; the style words before
+/// it go; of a family list, the first family stays.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+fn parse_pango(description: &str) -> Option<DesktopFont> {
     const STYLE_WORDS: [&str; 24] = [
         "normal",
         "roman",
@@ -60,10 +142,11 @@ fn family_from_pango(description: &str) -> Option<String> {
         "ultra-heavy",
     ];
     let mut words: Vec<&str> = description.split_whitespace().collect();
-    if words
-        .last()
-        .is_some_and(|last| last.trim_end_matches("px").parse::<f32>().is_ok())
-    {
+    let size_px = words.last().and_then(|last| match last.strip_suffix("px") {
+        Some(pixels) => pixels.parse::<f32>().ok(),
+        None => last.parse::<f32>().ok().map(|points| points * PX_PER_PT),
+    });
+    if size_px.is_some() {
         words.pop();
     }
     while words
@@ -74,27 +157,45 @@ fn family_from_pango(description: &str) -> Option<String> {
     }
     let joined = words.join(" ");
     let family = joined.split(',').next()?.trim();
-    (!family.is_empty()).then(|| family.to_owned())
+    (!family.is_empty()).then(|| DesktopFont {
+        family: family.to_owned(),
+        size_px: size_px.filter(|size| size.is_finite() && *size > 0.),
+    })
 }
 
-/// The family in a Qt font string, as KDE writes `font` in `kdeglobals`:
-/// `"SF Pro Display,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"`.
+/// A Qt font string, as KDE writes `font` and `fixed` in `kdeglobals`:
+/// `"SF Pro Display,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"`: family, point
+/// size, then pixel size, each `-1` when unset.
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-fn family_from_qt(value: &str) -> Option<String> {
-    let family = value.split(',').next()?.trim();
-    (!family.is_empty()).then(|| family.to_owned())
+fn parse_qt(value: &str) -> Option<DesktopFont> {
+    let mut fields = value.split(',').map(str::trim);
+    let family = fields.next().filter(|family| !family.is_empty())?;
+    let positive = |field: Option<&str>| {
+        field
+            .and_then(|field| field.parse::<f32>().ok())
+            .filter(|size| size.is_finite() && *size > 0.)
+    };
+    let points = positive(fields.next());
+    let pixels = positive(fields.next());
+    Some(DesktopFont {
+        family: family.to_owned(),
+        size_px: points.map(|points| points * PX_PER_PT).or(pixels),
+    })
 }
 
-/// `font` from the `[General]` group of a `kdeglobals` file.
+/// `key` from the `[General]` group of a `kdeglobals` file.
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
-fn kde_general_font(kdeglobals: &str) -> Option<String> {
+fn kde_general_font(kdeglobals: &str, key: &str) -> Option<DesktopFont> {
     let mut in_general = false;
     for line in kdeglobals.lines() {
         let line = line.trim();
         if line.starts_with('[') {
             in_general = line == "[General]";
-        } else if in_general && let Some(value) = line.strip_prefix("font=") {
-            return family_from_qt(value);
+        } else if in_general
+            && let Some((name, value)) = line.split_once('=')
+            && name.trim() == key
+        {
+            return parse_qt(value);
         }
     }
     None
@@ -112,123 +213,100 @@ fn installed<'a>(family: &str, installed: &'a [String]) -> Option<&'a str> {
 
 #[cfg(target_os = "linux")]
 mod linux {
-    use gpui::{App, AppContext as _, SharedString, font};
+    use gpui::{App, AppContext as _, SharedString, font, px};
     use gpui_component::Theme;
 
-    use super::{family_from_pango, installed, kde_general_font};
+    use super::{DesktopFont, Role, installed, kde_general_font, parse_pango};
 
     const PORTAL_NAMESPACE: &str = "org.gnome.desktop.interface";
-    const PORTAL_KEY: &str = "font-name";
 
     pub(super) fn apply(cx: &mut App) {
-        let names = cx.text_system().all_font_names();
-        let first = kde_font()
-            .and_then(|family| installed(&family, &names).map(str::to_owned))
-            .or_else(|| fontconfig_sans(cx, &names));
-        if let Some(family) = first {
-            set(&family, cx);
+        let kdeglobals = dirs::config_dir()
+            .and_then(|dir| std::fs::read_to_string(dir.join("kdeglobals")).ok())
+            .unwrap_or_default();
+        for role in Role::ALL {
+            let first = kde_general_font(&kdeglobals, role.kde_key()).or_else(|| {
+                generic(role, cx).map(|family| DesktopFont {
+                    family,
+                    size_px: None,
+                })
+            });
+            if let Some(desktop) = first {
+                set(role, &desktop, cx);
+            }
         }
-        let read = cx.background_spawn(portal_font());
+        let read = cx.background_spawn(portal_fonts());
         cx.spawn(async move |cx| {
-            let Some(family) = read.await else {
-                return;
-            };
+            let fonts = read.await;
             cx.update(|cx| {
-                let names = cx.text_system().all_font_names();
-                match installed(&family, &names) {
-                    Some(family) => set(family, cx),
-                    None => tracing::info!(%family, "the desktop's font isn't installed"),
+                for (role, desktop) in fonts {
+                    set(role, &desktop, cx);
                 }
             });
         })
         .detach();
     }
 
-    /// Names `family` on the theme, unless it is already there.
-    fn set(family: &str, cx: &mut App) {
-        if Theme::global(cx).font_family.as_ref() == family {
+    /// Puts the desktop's family, when installed, and for the UI its size,
+    /// when known, on the theme; the windows redraw if anything changed.
+    fn set(role: Role, desktop: &DesktopFont, cx: &mut App) {
+        let names = cx.text_system().all_font_names();
+        let family =
+            installed(&desktop.family, &names).map(|family| SharedString::from(family.to_owned()));
+        if family.is_none() {
+            tracing::info!(?role, family = %desktop.family, "the desktop's font isn't installed");
+        }
+        let theme = Theme::global(cx);
+        let (current_family, rem) = match role {
+            Role::Ui => (&theme.font_family, desktop.rem_px().map(px)),
+            Role::Mono => (&theme.mono_font_family, None),
+        };
+        let family = family.filter(|family| family != current_family);
+        let rem = rem.filter(|rem| *rem != theme.font_size);
+        if family.is_none() && rem.is_none() {
             return;
         }
-        tracing::info!(%family, "UI font");
-        let family = SharedString::from(family.to_owned());
-        Theme::update(cx, |theme| theme.font_family = family);
+        tracing::info!(?role, family = ?family, rem = ?rem, "desktop font");
+        Theme::update(cx, |theme| {
+            if let Some(family) = family {
+                match role {
+                    Role::Ui => theme.font_family = family,
+                    Role::Mono => theme.mono_font_family = family,
+                }
+            }
+            if let Some(rem) = rem {
+                theme.font_size = rem;
+            }
+        });
     }
 
-    fn kde_font() -> Option<String> {
-        let path = dirs::config_dir()?.join("kdeglobals");
-        let text = std::fs::read_to_string(path).ok()?;
-        kde_general_font(&text)
-    }
-
-    /// The installed family fontconfig gives for `sans-serif`.
-    fn fontconfig_sans(cx: &App, names: &[String]) -> Option<String> {
+    /// The installed family fontconfig gives for the role's generic family.
+    fn generic(role: Role, cx: &App) -> Option<String> {
         let text_system = cx.text_system();
         let resolved = text_system
-            .get_font_for_id(text_system.resolve_font(&font("sans-serif")))
+            .get_font_for_id(text_system.resolve_font(&font(role.generic_family())))
             .map(|font| font.family.to_string())?;
-        installed(&resolved, names).map(str::to_owned)
+        installed(&resolved, &text_system.all_font_names()).map(str::to_owned)
     }
 
-    async fn portal_font() -> Option<String> {
-        let settings = ashpd::desktop::settings::Settings::new().await.ok()?;
-        let description = settings
-            .read::<String>(PORTAL_NAMESPACE, PORTAL_KEY)
-            .await
-            .ok()?;
-        family_from_pango(&description)
+    /// The fonts the settings portal names, for the roles it answers.
+    async fn portal_fonts() -> Vec<(Role, DesktopFont)> {
+        let Ok(settings) = ashpd::desktop::settings::Settings::new().await else {
+            return Vec::new();
+        };
+        let mut fonts = Vec::new();
+        for role in Role::ALL {
+            if let Ok(description) = settings
+                .read::<String>(PORTAL_NAMESPACE, role.portal_key())
+                .await
+                && let Some(desktop) = parse_pango(&description)
+            {
+                fonts.push((role, desktop));
+            }
+        }
+        fonts
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_pango_description_gives_its_family() {
-        assert_eq!(
-            family_from_pango("Cantarell 11").as_deref(),
-            Some("Cantarell")
-        );
-        assert_eq!(
-            family_from_pango("SF Pro Display  10").as_deref(),
-            Some("SF Pro Display")
-        );
-        assert_eq!(
-            family_from_pango("Noto Sans Bold Italic 10").as_deref(),
-            Some("Noto Sans")
-        );
-        assert_eq!(
-            family_from_pango("Inter, Noto Sans 11px").as_deref(),
-            Some("Inter")
-        );
-        assert_eq!(
-            family_from_pango("Adwaita Sans").as_deref(),
-            Some("Adwaita Sans")
-        );
-        assert_eq!(family_from_pango("  12 "), None);
-        assert_eq!(family_from_pango(""), None);
-    }
-
-    #[test]
-    fn a_qt_font_string_gives_its_family() {
-        assert_eq!(
-            family_from_qt("SF Pro Display,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1").as_deref(),
-            Some("SF Pro Display")
-        );
-        assert_eq!(family_from_qt(",10"), None);
-    }
-
-    #[test]
-    fn kdeglobals_gives_the_general_font_only() {
-        let file = "[WM]\nfont=Wrong,9\n\n[General]\nColorScheme=Breeze\nfont=Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1\nmenuFont=Other,10\n";
-        assert_eq!(kde_general_font(file).as_deref(), Some("Noto Sans"));
-        assert_eq!(kde_general_font("[General]\nColorScheme=Breeze\n"), None);
-    }
-
-    #[test]
-    fn an_installed_family_matches_without_case() {
-        let names = vec!["SF Pro Display".to_owned(), "Noto Sans".to_owned()];
-        assert_eq!(installed("sf pro display", &names), Some("SF Pro Display"));
-        assert_eq!(installed("Cantarell", &names), None);
-    }
-}
+mod tests;

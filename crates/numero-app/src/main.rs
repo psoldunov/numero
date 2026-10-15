@@ -8,7 +8,7 @@
 //!   column, and the element that keeps it level with the editor's lines.
 //! - `document`: the engine's answers as editor ranges and result rows.
 //! - `theme`: the light and dark colours; `ui_font`: the desktop's sans
-//!   family for the UI text.
+//!   and monospace fonts.
 //! - `library`: the calculations on disk; `settings`: the settings file;
 //!   `export`: a calculation as text for the Export menu.
 //! - `calculations_list`, `settings_panel`, `footer` and `widgets`: the list
