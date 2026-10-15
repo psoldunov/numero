@@ -3,30 +3,34 @@
 //! saved; the settings themselves live with the calculator, which this
 //! window changes through `Calculator::update_settings`.
 //!
-//! - `chrome`: the window's options and its title bar.
-//! - `general`: precision, font size, night mode, the window's place in
-//!   the desktop and the global shortcut.
+//! - `chrome`: the window's options and its title bar, which holds the tabs.
+//! - `look` and `controls`: the window's colours, and the sections, rows
+//!   and controls drawn in them.
+//! - `general`: the General tab, its theme, font size and window sections.
+//! - `formatting`: precision, the separators and the CSS unit sizes.
 //! - `recorder`: the global shortcut's recorder.
-//! - `formatting`: Numero's own number format settings.
 //! - `folder`: where the calculations are kept.
 //! - `extensions`: the Extensions tab.
 
 mod chrome;
+mod controls;
 mod extensions;
 mod folder;
 mod formatting;
 mod general;
+mod look;
 mod recorder;
 
 use gpui::{
     AnyWindowHandle, App, AppContext as _, Context, Entity, FocusHandle, Focusable, Global,
-    InteractiveElement as _, IntoElement, ParentElement as _, Render,
-    StatefulInteractiveElement as _, Styled as _, Subscription, WeakEntity, Window, div, px,
+    InteractiveElement as _, IntoElement, ParentElement as _, Render, Styled as _, Subscription,
+    WeakEntity, Window, div, px,
 };
 use gpui_component::input::InputState;
-use gpui_component::tab::TabBar;
-use gpui_component::{ActiveTheme as _, v_flex};
+use gpui_component::scroll::ScrollableElement as _;
+use gpui_component::v_flex;
 
+use self::look::Look;
 use crate::calculator::Calculator;
 use crate::calculator::main_window;
 use crate::settings::Settings;
@@ -57,6 +61,7 @@ pub(crate) fn open(cx: &mut App) {
         tracing::warn!("no calculator to show the preferences of");
         return;
     };
+    crate::frame::fill_opaque::<Preferences>(Look::ground, cx);
     let opened = gpui::open_window(chrome::window_options(cx), cx, |window, cx| {
         crate::frame::connect(window, cx);
         cx.new(|cx| Preferences::new(calculator.downgrade(), window, cx))
@@ -165,28 +170,6 @@ impl Preferences {
         self.recorder.stop(cx);
         cx.notify();
     }
-
-    fn tabs(&self, cx: &mut Context<'_, Self>) -> impl IntoElement + use<> {
-        let selected = match self.tab {
-            Tab::General => 0,
-            Tab::Extensions => 1,
-        };
-        div().flex().justify_center().pb_3().child(
-            TabBar::new("preferences-tabs")
-                .segmented()
-                .selected_index(selected)
-                .child("General")
-                .child("Extensions")
-                .on_click(cx.listener(|this, index: &usize, _, cx| {
-                    let tab = if *index == 0 {
-                        Tab::General
-                    } else {
-                        Tab::Extensions
-                    };
-                    this.select_tab(tab, cx);
-                })),
-        )
-    }
 }
 
 impl Focusable for Preferences {
@@ -205,18 +188,15 @@ impl Render for Preferences {
             .size_full()
             .track_focus(&self.focus)
             .text_sm()
-            .text_color(cx.theme().foreground)
-            .child(chrome::title_bar(window, cx))
-            .child(self.tabs(cx))
+            .text_color(Look::current(cx).ink)
+            .child(chrome::title_bar(self, window, cx))
             .child(
                 div()
                     .id("preferences-body")
                     .flex_1()
                     .min_h_0()
-                    .overflow_y_scroll()
-                    .px(px(20.))
-                    .pb(px(16.))
-                    .child(body),
+                    .child(div().px(px(16.)).pt(px(4.)).pb(px(20.)).child(body))
+                    .overflow_y_scrollbar(),
             )
     }
 }

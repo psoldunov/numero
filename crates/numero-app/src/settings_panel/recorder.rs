@@ -9,12 +9,14 @@
 
 use gpui::prelude::FluentBuilder as _;
 use gpui::{
-    Context, InteractiveElement as _, IntoElement, Keystroke, ParentElement as _,
+    AnyElement, Context, InteractiveElement as _, IntoElement, Keystroke, ParentElement as _,
     StatefulInteractiveElement as _, Styled as _, Subscription, Window, div, px,
 };
-use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex};
+use gpui_component::{Icon, IconName, Sizable as _, h_flex};
 
 use super::Preferences;
+use super::controls::hint;
+use super::look::Look;
 
 /// What a keystroke does to a recording.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -171,61 +173,77 @@ impl Preferences {
         }
     }
 
-    /// The recorder's button and the ✕ that clears the shortcut.
-    pub(super) fn recorder(&self, cx: &mut Context<'_, Self>) -> impl IntoElement + use<> {
-        let theme = cx.theme();
-        let (border, hover, muted, ring) = (
-            theme.border,
-            theme.secondary_hover,
-            theme.muted_foreground,
-            theme.ring,
-        );
+    /// What the shortcut does, or, while recording, what to press.
+    pub(super) fn recorder_hint(&self, look: &Look) -> AnyElement {
+        match &self.recorder.recording {
+            Some(recording) if recording.refused => hint(REFUSED, look.danger),
+            Some(_) => hint("Press the keys together. Esc cancels.", look.muted),
+            None => hint("Shows and hides Numero from any app", look.muted),
+        }
+    }
+
+    /// The field that records the shortcut, ringed in the accent while it
+    /// listens, with the ✕ that clears it inside.
+    pub(super) fn recorder(
+        &self,
+        look: &Look,
+        cx: &mut Context<'_, Self>,
+    ) -> impl IntoElement + use<> {
         let hotkey = self.settings(cx).hotkey;
-        let recording = self.recorder.recording.as_ref();
-        let label = match (recording, &hotkey) {
-            (Some(recording), _) if recording.refused => {
-                "Hold Ctrl, Alt or ⌘ with the key".to_owned()
-            }
-            (Some(_), _) => "Press a shortcut · Esc cancels".to_owned(),
-            (None, Some(hotkey)) => describe(hotkey),
-            (None, None) => "Click to record".to_owned(),
+        let recording = self.recorder.is_recording();
+        let (label, ink) = match (recording, &hotkey) {
+            (true, _) => ("Press keys…".to_owned(), look.ink),
+            (false, Some(hotkey)) => (describe(hotkey), look.ink),
+            (false, None) => ("Record shortcut".to_owned(), look.muted),
         };
+        let (track, hover, clear_hover, muted) =
+            (look.track, look.button, look.button_hover, look.muted);
         h_flex()
+            .id("hotkey-recorder")
+            .w(px(168.))
+            .h(px(26.))
+            .pl(px(10.))
+            .pr(px(3.))
             .gap_1()
+            .rounded(px(7.))
+            .bg(track)
+            .border_2()
+            .border_color(if recording {
+                look.accent
+            } else {
+                gpui::transparent_black()
+            })
+            .cursor_pointer()
+            .hover(move |style| style.bg(hover))
+            .on_click(cx.listener(|this, _, window, cx| {
+                if this.recorder.is_recording() {
+                    this.recorder.stop(cx);
+                } else {
+                    this.start_recording(window, cx);
+                }
+            }))
             .child(
                 div()
-                    .id("hotkey-recorder")
-                    .min_w(px(150.))
-                    .px_2()
-                    .py(px(3.))
-                    .rounded(px(6.))
-                    .border_1()
-                    .border_color(if recording.is_some() { ring } else { border })
-                    .text_center()
-                    .cursor_pointer()
-                    .when(hotkey.is_none() && recording.is_none(), |field| {
-                        field.text_color(muted)
-                    })
-                    .hover(move |style| style.bg(hover))
-                    .on_click(cx.listener(|this, _, window, cx| {
-                        if this.recorder.is_recording() {
-                            this.recorder.stop(cx);
-                        } else {
-                            this.start_recording(window, cx);
-                        }
-                    }))
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .text_color(ink)
                     .child(label),
             )
-            .when(hotkey.is_some(), |row| {
-                row.child(
+            .when(hotkey.is_some() && !recording, |field| {
+                field.child(
                     div()
                         .id("hotkey-clear")
-                        .p_1()
-                        .rounded(px(4.))
-                        .cursor_pointer()
+                        .size(px(18.))
+                        .flex()
+                        .flex_none()
+                        .items_center()
+                        .justify_center()
+                        .rounded(px(5.))
                         .text_color(muted)
-                        .hover(move |style| style.bg(hover))
+                        .hover(move |style| style.bg(clear_hover))
                         .on_click(cx.listener(|this, _, _, cx| {
+                            cx.stop_propagation();
                             this.recorder.stop(cx);
                             this.update(|settings| settings.hotkey = None, cx);
                         }))
@@ -234,6 +252,13 @@ impl Preferences {
             })
     }
 }
+
+/// Why a key on its own can't be the shortcut, in the platform's words.
+const REFUSED: &str = if cfg!(target_os = "macos") {
+    "Hold ⌃, ⌥ or ⌘ with the key"
+} else {
+    "Hold Ctrl, Alt or Super with the key"
+};
 
 #[cfg(test)]
 mod tests {

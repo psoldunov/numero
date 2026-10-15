@@ -13,14 +13,18 @@
 //!
 //! On macOS AppKit draws the frame, corners and shadow; [`Frame`] only fills
 //! the window with the translucent background and asks for the blur.
+//!
+//! A window whose view asked for it with [`fill_opaque`] gets the same
+//! frame filled with a solid colour instead, and no blur.
 
 mod resize;
 
+use std::any::TypeId;
 use std::cell::{Cell, RefCell};
 
 use gpui::base::{Root, RootPlugin};
 use gpui::{
-    AnyElement, App, Bounds, BoxShadow, Context, Corners, Decorations, Div, Edges, Hsla,
+    AnyElement, App, Bounds, BoxShadow, Context, Corners, Decorations, Div, Edges, Global, Hsla,
     InteractiveElement, IntoElement, MouseButton, ParentElement as _, Pixels, Point, Render,
     Stateful, Styled, Tiling, Window, div, hsla, point, px, size,
 };
@@ -61,6 +65,37 @@ pub(crate) fn register_frame(cx: &mut App) {
 /// before the first frame. Call it while building the window's view.
 pub(crate) fn connect(window: &Window, cx: &mut App) {
     blur::connect(window, cx);
+}
+
+/// The colour an opaque window is filled with, asked each frame so it
+/// follows the theme.
+type Ground = fn(&App) -> Hsla;
+
+/// The views whose windows are filled opaque, each with its colour.
+#[derive(Default)]
+struct Opaque(Vec<(TypeId, Ground)>);
+
+impl Global for Opaque {}
+
+/// Fills every window whose view is a `V` with `ground` rather than the
+/// translucent background, and blurs nothing behind it.
+pub(crate) fn fill_opaque<V: 'static>(ground: Ground, cx: &mut App) {
+    let view = TypeId::of::<V>();
+    let opaque = cx.default_global::<Opaque>();
+    if !opaque.0.iter().any(|(kind, _)| *kind == view) {
+        opaque.0.push((view, ground));
+    }
+}
+
+/// The solid colour a window showing a view of type `view` is filled with,
+/// if [`fill_opaque`] asked for one.
+fn opaque_ground(view: TypeId, cx: &App) -> Option<Hsla> {
+    let (_, ground) = cx
+        .try_global::<Opaque>()?
+        .0
+        .iter()
+        .find(|(kind, _)| *kind == view)?;
+    Some(ground(cx))
 }
 
 /// `color` as the translucent window paints it: as it is where the desktop
@@ -179,8 +214,11 @@ impl RootPlugin for Frame {
         let Some(content) = captured else {
             return surface;
         };
-        self.blur(window, cx);
-        frame(content, window, cx)
+        let ground = opaque_ground(root.view().entity_type(), cx);
+        if ground.is_none() {
+            self.blur(window, cx);
+        }
+        frame(content, ground, window, cx)
     }
 }
 
@@ -218,8 +256,9 @@ fn corners(tiling: Tiling) -> Corners<Pixels> {
 
 /// `content` in the frame: inset for the shadow on every side that isn't
 /// tiled, with a hairline border and rounded corners where it floats free.
-fn frame(content: AnyElement, window: &mut Window, cx: &App) -> AnyElement {
-    let background = see_through(Palette::current(cx).background, cx);
+/// Filled with `ground` when there is one, else translucent.
+fn frame(content: AnyElement, ground: Option<Hsla>, window: &mut Window, cx: &App) -> AnyElement {
+    let background = ground.unwrap_or_else(|| see_through(Palette::current(cx).background, cx));
     let Decorations::Client { tiling } = window.window_decorations() else {
         return div()
             .size_full()
@@ -348,6 +387,18 @@ mod tests {
         let color = hsla(0.5, 0.1, 0.9, 0.8);
         assert_eq!(see_through_when(color, true), color);
         assert_eq!(see_through_when(color, false).a, 1.);
+    }
+
+    #[gpui::test]
+    fn only_views_that_asked_are_filled_opaque(cx: &mut gpui::TestAppContext) {
+        let solid = hsla(0., 0., 0.2, 1.);
+        cx.update(|cx| {
+            assert_eq!(opaque_ground(TypeId::of::<u8>(), cx), None);
+            fill_opaque::<u8>(|_| hsla(0., 0., 0.2, 1.), cx);
+            fill_opaque::<u8>(|_| hsla(0., 0., 0.9, 1.), cx);
+            assert_eq!(opaque_ground(TypeId::of::<u8>(), cx), Some(solid));
+            assert_eq!(opaque_ground(TypeId::of::<u16>(), cx), None);
+        });
     }
 
     #[test]

@@ -7,11 +7,11 @@ use gpui::{
     Context, InteractiveElement as _, IntoElement, ParentElement as _,
     StatefulInteractiveElement as _, Styled as _, div, px,
 };
-use gpui_component::button::Button;
-use gpui_component::{ActiveTheme as _, Disableable as _, Sizable as _, v_flex};
+use gpui_component::{ActiveTheme as _, Disableable as _, h_flex, v_flex};
 
 use super::Preferences;
-use super::formatting::heading;
+use super::controls::{SECTION_GAP, button, hint, panel, path_field, section};
+use super::look::Look;
 use crate::menus::OpenExtensionsFolder;
 
 const ABOUT: &str = "Extensions are JavaScript files that add your own constants, units and \
@@ -22,15 +22,15 @@ so restart Numero after changing one. Files written for Numi work as they are.";
 const CALLS: [(&str, &str); 3] = [
     (
         "numi.setVariable(name, value)",
-        "defines a variable every calculation can use, such as a tax rate",
+        "Defines a variable every calculation can use, such as a tax rate.",
     ),
     (
         "numi.addUnit({ id, phrases, baseUnitId, ratio, format })",
-        "adds a unit, converted through the unit it is based on",
+        "Adds a unit, converted through the unit it is based on.",
     ),
     (
         "numi.addFunction({ id, phrases }, fn)",
-        "adds a function, called as name(a; b), whose values come in as objects",
+        "Adds a function, called as name(a; b), whose values come in as objects.",
     ),
 ];
 
@@ -45,55 +45,65 @@ impl Preferences {
                 )
             })
             .unwrap_or_default();
-        let theme = cx.theme();
-        let (muted, mono, panel) = (
-            theme.muted_foreground,
-            theme.mono_font_family.clone(),
-            theme.secondary,
-        );
-        v_flex()
-            .gap_3()
-            .child(div().child(ABOUT))
-            .child(v_flex().gap_1p5().children(CALLS.map(|(call, what)| {
-                v_flex()
-                    .child(div().font_family(mono.clone()).text_xs().child(call))
-                    .child(div().text_xs().text_color(muted).child(what))
-            })))
-            .child(
-                div().child(
-                    Button::new("open-extensions-folder")
-                        .small()
-                        .outline()
-                        .label("Open extensions folder")
-                        .disabled(dir.is_none())
-                        .on_click(|_, window, cx| {
-                            window.dispatch_action(Box::new(OpenExtensionsFolder), cx);
-                        }),
-                ),
-            )
-            .when_some(dir, |list, dir| {
-                list.child(
-                    div()
-                        .text_xs()
-                        .text_color(muted)
-                        .child(dir.display().to_string()),
-                )
+        let look = Look::current(cx);
+        let mono = cx.theme().mono_font_family.clone();
+        let folder = v_flex()
+            .gap(px(10.))
+            .child(div().text_color(look.ink).child(ABOUT))
+            .when_some(dir.clone(), |folder, dir| {
+                folder.child(path_field(dir.display().to_string(), &look))
             })
-            .child(heading("Loaded at start", cx))
             .child(
-                div()
-                    .id("extension-log")
-                    .max_h(px(160.))
-                    .overflow_y_scroll()
-                    .p_2()
-                    .rounded(px(6.))
-                    .bg(panel)
-                    .font_family(mono)
-                    .text_xs()
-                    .when(log.is_empty(), |panel| {
-                        panel.text_color(muted).child("No extensions loaded.")
-                    })
-                    .children(log.into_iter().map(|line| div().child(line))),
-            )
+                h_flex().child(
+                    button(
+                        "open-extensions-folder",
+                        "Open extensions folder",
+                        &look,
+                        cx,
+                    )
+                    .disabled(dir.is_none())
+                    .on_click(|_, window, cx| {
+                        window.dispatch_action(Box::new(OpenExtensionsFolder), cx);
+                    }),
+                ),
+            );
+        let calls = CALLS.map(|(call, what)| {
+            v_flex()
+                .gap(px(2.))
+                .child(
+                    div()
+                        .font_family(mono.clone())
+                        .text_xs()
+                        .text_color(look.ink)
+                        .child(call),
+                )
+                .child(hint(what, look.muted))
+        });
+        let log = div()
+            .id("extension-log")
+            .max_h(px(160.))
+            .overflow_y_scroll()
+            .font_family(mono)
+            .text_xs()
+            .text_color(look.ink)
+            .when(log.is_empty(), |list| {
+                list.text_color(look.muted).child("No extensions loaded.")
+            })
+            .children(log.into_iter().map(|line| div().child(line)));
+        v_flex()
+            .gap(SECTION_GAP)
+            .child(panel(&look).py(px(12.)).child(folder))
+            .child(section(
+                "What an extension can call",
+                panel(&look)
+                    .py(px(12.))
+                    .child(v_flex().gap(px(12.)).children(calls)),
+                &look,
+            ))
+            .child(section(
+                "Loaded at start",
+                panel(&look).py(px(12.)).child(log),
+                &look,
+            ))
     }
 }

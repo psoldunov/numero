@@ -1,15 +1,18 @@
-//! Numero's own number format settings, which Numi leaves to the system:
-//! the decimal and thousands separators, and the pixels per inch and per
-//! em that CSS units convert with. Also the typed fields' handling,
-//! precision's included.
+//! How results are written: Numi's precision, and Numero's own decimal and
+//! thousands separators, which Numi leaves to the system. Also the pixels
+//! per inch and per em that CSS units convert with, and the typed fields'
+//! handling, precision's included.
 
-use gpui::{App, Context, Entity, IntoElement, ParentElement as _, Styled as _, Window, div, px};
-use gpui_component::input::{Input, InputEvent, InputState};
-use gpui_component::{ActiveTheme as _, Sizable as _, h_flex, v_flex};
+use gpui::{Context, Entity, IntoElement, ParentElement as _, Styled as _, Window, px};
+use gpui_component::h_flex;
+use gpui_component::input::{InputEvent, InputState};
 
 use super::Preferences;
+use super::controls::{
+    Choice, OnClick, choices, hint, number_field, panel, row, section, step_button,
+};
+use super::look::Look;
 use crate::settings::{GROUPINGS, MAX_PRECISION, Settings};
-use crate::widgets::{chip, row};
 
 /// `value` as a settings field shows it: no trailing `.0`.
 pub(super) fn number(value: f64) -> String {
@@ -48,8 +51,13 @@ impl Preferences {
                 }
             }
             // Leaving the field shows what was taken.
-            InputEvent::Blur => self.show_precision(window, cx),
-            InputEvent::PressEnter { .. } | InputEvent::Focus => {}
+            InputEvent::Blur => {
+                self.show_precision(window, cx);
+                cx.notify();
+            }
+            // The field's ring follows the focus.
+            InputEvent::Focus => cx.notify(),
+            InputEvent::PressEnter { .. } => {}
         }
     }
 
@@ -88,8 +96,14 @@ impl Preferences {
         _: &mut Window,
         cx: &mut Context<'_, Self>,
     ) {
-        if !matches!(event, InputEvent::Change) {
-            return;
+        match event {
+            InputEvent::Change => {}
+            // The field's ring follows the focus.
+            InputEvent::Focus | InputEvent::Blur => {
+                cx.notify();
+                return;
+            }
+            InputEvent::PressEnter { .. } => return,
         }
         let Some(value) = parse_size(&field.read(cx).value()) else {
             return;
@@ -107,84 +121,124 @@ impl Preferences {
         );
     }
 
-    /// The number format section, below Numi's own settings.
-    pub(super) fn formatting(
+    /// How results are written: their decimal places and separators.
+    pub(super) fn results_section(
         &self,
         settings: &Settings,
+        look: &Look,
+        window: &Window,
         cx: &mut Context<'_, Self>,
     ) -> impl IntoElement + use<> {
-        let (ppi, em) = (self.ppi.clone(), self.em.clone());
-        let decimal = self.decimal_chips(settings, cx);
-        let grouping = self.grouping_chips(settings, cx);
-        v_flex()
-            .gap_2()
-            .child(heading("Number format", cx))
-            .child(row("Decimal separator", decimal, cx))
-            .child(row("Thousands separator", grouping, cx))
-            .child(row(
-                "Pixels per inch",
-                Input::new(&ppi).xsmall().w(px(64.)),
-                cx,
-            ))
-            .child(row(
-                "Pixels per em",
-                Input::new(&em).xsmall().w(px(64.)),
-                cx,
-            ))
-    }
-
-    fn decimal_chips(
-        &self,
-        settings: &Settings,
-        cx: &mut Context<'_, Self>,
-    ) -> impl IntoElement + use<> {
-        let chips = ['.', ','].into_iter().enumerate().map(|(ix, separator)| {
-            chip(
-                ("decimal", ix),
-                separator.to_string(),
-                settings.decimal_separator == separator,
-                cx.listener(move |this, _, _, cx| {
+        let precision = self.precision_stepper(settings, look, window, cx);
+        let decimal = ['.', ',']
+            .into_iter()
+            .map(|separator| Choice {
+                label: decimal_sample(separator).into(),
+                selected: settings.decimal_separator == separator,
+                on_click: Box::new(cx.listener(move |this, _, _, cx| {
                     this.update(|settings| settings.decimal_separator = separator, cx);
-                }),
-                cx,
-            )
-        });
-        h_flex().gap_0p5().children(chips.collect::<Vec<_>>())
+                })),
+            })
+            .collect();
+        let grouping = groupings_beside(settings.decimal_separator)
+            .map(|grouping| Choice {
+                label: grouping_sample(grouping).into(),
+                selected: settings.grouping_separator == grouping,
+                on_click: Box::new(cx.listener(move |this, _, _, cx| {
+                    this.update(|settings| settings.grouping_separator = grouping, cx);
+                })),
+            })
+            .collect();
+        section(
+            "Results",
+            panel(look)
+                .child(row(
+                    "Precision",
+                    Some(hint("Decimal places shown", look.muted)),
+                    precision,
+                    look,
+                ))
+                .child(row(
+                    "Decimal separator",
+                    None,
+                    choices("decimal", decimal, look),
+                    look,
+                ))
+                .child(row(
+                    "Thousands separator",
+                    None,
+                    choices("grouping", grouping, look),
+                    look,
+                )),
+            look,
+        )
     }
 
-    fn grouping_chips(
+    /// `−`, the typed precision, `+`; a step past 0 or 10 can't be taken.
+    fn precision_stepper(
         &self,
         settings: &Settings,
+        look: &Look,
+        window: &Window,
         cx: &mut Context<'_, Self>,
     ) -> impl IntoElement + use<> {
-        let chips = GROUPINGS.into_iter().enumerate().map(|(ix, grouping)| {
-            let label = match grouping {
-                None => "None".to_owned(),
-                Some(' ') => "Space".to_owned(),
-                Some(other) => other.to_string(),
-            };
-            chip(
-                ("grouping", ix),
-                label,
-                settings.grouping_separator == grouping,
-                cx.listener(move |this, _, _, cx| {
-                    this.update(|settings| settings.grouping_separator = grouping, cx);
-                }),
-                cx,
-            )
+        let down = (settings.precision > 0).then(|| -> OnClick {
+            Box::new(cx.listener(|this, _, window, cx| this.step_precision(-1, window, cx)))
         });
-        h_flex().gap_0p5().children(chips.collect::<Vec<_>>())
+        let up = (settings.precision < MAX_PRECISION).then(|| -> OnClick {
+            Box::new(cx.listener(|this, _, window, cx| this.step_precision(1, window, cx)))
+        });
+        h_flex()
+            .gap_1()
+            .child(step_button("precision-down", "−", down, look))
+            .child(number_field(&self.precision, px(44.), look, window, cx))
+            .child(step_button("precision-up", "+", up, look))
+    }
+
+    /// The sizes CSS units convert with.
+    pub(super) fn units_section(
+        &self,
+        look: &Look,
+        window: &Window,
+        cx: &mut Context<'_, Self>,
+    ) -> impl IntoElement + use<> {
+        section(
+            "CSS units",
+            panel(look)
+                .child(row(
+                    "Pixels per inch",
+                    Some(hint("How px converts to cm and inches", look.muted)),
+                    number_field(&self.ppi, px(64.), look, window, cx),
+                    look,
+                ))
+                .child(row(
+                    "Pixels per em",
+                    Some(hint("How em converts to px", look.muted)),
+                    number_field(&self.em, px(64.), look, window, cx),
+                    look,
+                )),
+            look,
+        )
     }
 }
 
-/// A section's heading.
-pub(super) fn heading(title: &'static str, cx: &App) -> impl IntoElement + use<> {
-    div()
-        .pt_3()
-        .pb_1()
-        .text_xs()
-        .text_color(cx.theme().muted_foreground)
-        .child(title)
+/// A number written with `separator` before its decimals, as the choice
+/// shows it.
+fn decimal_sample(separator: char) -> String {
+    format!("1{separator}5")
+}
+
+/// A thousand grouped with `grouping`, as the choice shows it.
+fn grouping_sample(grouping: Option<char>) -> String {
+    grouping.map_or_else(|| "1000".to_owned(), |grouping| format!("1{grouping}000"))
+}
+
+/// The thousands separators that can stand beside `decimal`: every one but
+/// itself, which `Settings::checked` would drop.
+fn groupings_beside(decimal: char) -> impl Iterator<Item = Option<char>> {
+    GROUPINGS
+        .into_iter()
+        .filter(move |grouping| *grouping != Some(decimal))
 }
 
 #[cfg(test)]
@@ -207,5 +261,21 @@ mod tests {
         assert_eq!(parse_size("abc"), None);
         assert_eq!(number(16.), "16");
         assert_eq!(number(1.5), "1.5");
+    }
+
+    #[test]
+    fn the_choices_show_what_a_number_will_look_like() {
+        assert_eq!(decimal_sample(','), "1,5");
+        assert_eq!(grouping_sample(None), "1000");
+        assert_eq!(grouping_sample(Some(' ')), "1 000");
+        assert_eq!(grouping_sample(Some('.')), "1.000");
+    }
+
+    #[test]
+    fn the_decimal_separator_is_never_offered_for_thousands() {
+        let beside_point: Vec<_> = groupings_beside('.').collect();
+        assert_eq!(beside_point, [None, Some(','), Some(' ')]);
+        let beside_comma: Vec<_> = groupings_beside(',').collect();
+        assert_eq!(beside_comma, [None, Some('.'), Some(' ')]);
     }
 }

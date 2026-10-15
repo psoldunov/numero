@@ -1,7 +1,8 @@
-//! The Preferences window's options and title bar. It looks like the
-//! calculator's window: the same frame and translucent background (the
-//! frame's plugins decorate every window), its own title bar on Linux, and
-//! AppKit's traffic lights inside it on macOS.
+//! The Preferences window's options and title bar. It has the calculator
+//! window's frame (the frame's plugins decorate every window), filled
+//! opaque in its own ground, its own title bar on Linux, and AppKit's
+//! traffic lights inside it on macOS. The tabs sit in the middle of the
+//! bar, where the title would be.
 
 use gpui::prelude::FluentBuilder as _;
 use gpui::{
@@ -11,12 +12,14 @@ use gpui::{
 };
 use gpui_component::{ActiveTheme as _, Icon, IconName, Sizable as _, h_flex};
 
-use super::Preferences;
+use super::controls::{Choice, choices};
+use super::look::Look;
+use super::{Preferences, Tab};
 
 const TITLE: &str = "Numero Preferences";
-const WIDTH: f32 = 460.;
-const HEIGHT: f32 = 560.;
-const BAR_HEIGHT: f32 = 38.;
+const WIDTH: f32 = 480.;
+const HEIGHT: f32 = 640.;
+const BAR_HEIGHT: f32 = 44.;
 
 pub(super) fn window_options(cx: &App) -> WindowOptions {
     WindowOptions {
@@ -25,7 +28,7 @@ pub(super) fn window_options(cx: &App) -> WindowOptions {
             size(px(WIDTH), px(HEIGHT)),
             cx,
         ))),
-        window_min_size: Some(size(px(380.), px(320.))),
+        window_min_size: Some(size(px(420.), px(360.))),
         app_id: Some(crate::app::APP_ID.to_owned()),
         titlebar: Some(titlebar_options()),
         window_background: WindowBackgroundAppearance::Transparent,
@@ -62,19 +65,25 @@ const fn decorations() -> Option<gpui::WindowDecorations> {
     Some(gpui::WindowDecorations::Client)
 }
 
-/// The title in the middle; a press moves the window, and on Linux a
-/// close button sits on the right.
+/// The tabs in the middle; a press elsewhere moves the window, and on
+/// Linux a close button sits on the right.
 pub(super) fn title_bar(
+    preferences: &Preferences,
     window: &Window,
     cx: &mut Context<'_, Preferences>,
 ) -> impl IntoElement + use<> {
     let decorated = matches!(window.window_decorations(), Decorations::Client { .. });
-    let theme = cx.theme();
-    let (muted, danger, danger_text) = (
-        theme.muted_foreground,
-        theme.danger,
-        theme.danger_foreground,
-    );
+    let look = Look::current(cx);
+    let (muted, danger, danger_text) =
+        (look.muted, cx.theme().danger, cx.theme().danger_foreground);
+    let tabs = [(Tab::General, "General"), (Tab::Extensions, "Extensions")]
+        .into_iter()
+        .map(|(tab, label)| Choice {
+            label: label.into(),
+            selected: preferences.tab == tab,
+            on_click: Box::new(cx.listener(move |this, _, _, cx| this.select_tab(tab, cx))),
+        })
+        .collect();
     h_flex()
         .id("preferences-title-bar")
         .h(px(BAR_HEIGHT))
@@ -82,14 +91,15 @@ pub(super) fn title_bar(
         .px_3()
         .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
         .child(div().w(px(24.)))
-        .child(
-            div()
-                .flex_1()
-                .flex()
-                .justify_center()
-                .text_color(muted)
-                .child("Preferences"),
-        )
+        .child(div().flex_1().flex().justify_center().child(
+            choices("preferences-tab", tabs, &look).on_mouse_down(
+                MouseButton::Left,
+                |_, window, cx| {
+                    window.prevent_default();
+                    cx.stop_propagation();
+                },
+            ),
+        ))
         .child(div().w(px(24.)).when(decorated, |slot| {
             slot.child(
                 div()
