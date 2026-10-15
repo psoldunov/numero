@@ -52,6 +52,7 @@ fn start(launch: Launch, cx: &mut App) {
     gpui::init(cx);
     frame::register_frame(cx);
     Theme::sync_system_appearance(None, cx);
+    crate::ui_font::apply(cx);
     cx.bind_keys(key_bindings());
     menus::init(cx);
     cx.on_action(|_: &Quit, cx| cx.quit());
