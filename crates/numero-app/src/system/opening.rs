@@ -309,7 +309,7 @@ mod tests {
     #[test]
     fn the_command_line_opens_paths_links_and_skips_options() {
         let args = [
-            "--hidden",
+            "--autostart",
             "sums.numi",
             "/abs/b.txt",
             "numero://new?text=2*3",

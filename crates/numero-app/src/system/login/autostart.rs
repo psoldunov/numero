@@ -6,7 +6,8 @@
 //!
 //! The entry starts the binary that wrote it: the AppImage when there is
 //! one, else the path on `PATH` that leads to this binary (a Nix profile's
-//! link outlives the store path behind it), else the binary itself.
+//! link outlives the store path behind it), else the binary itself. It
+//! passes [`AUTOSTART_OPTION`], so the launch knows the login started it.
 
 use std::env;
 use std::ffi::OsStr;
@@ -14,6 +15,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use super::AUTOSTART_OPTION;
 use crate::app::{APP_ID, ICON_NAME};
 
 /// The entry's place under the XDG config directory.
@@ -50,6 +52,76 @@ pub(in crate::system) fn set(on: bool) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+/// Adds [`AUTOSTART_OPTION`] to an entry an older Numero wrote without it,
+/// so the next login starts in the tray. An entry that is off, or carries
+/// the option already, is left as it is.
+pub(in crate::system) fn upgrade() {
+    let Some(path) = entry_path() else {
+        return;
+    };
+    let content = match fs::read_to_string(&path) {
+        Ok(content) => content,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return,
+        Err(error) => {
+            tracing::warn!(%error, path = %path.display(), "couldn't read the autostart entry");
+            return;
+        }
+    };
+    let Some(upgraded) = upgraded(&content) else {
+        return;
+    };
+    match write(&path, &upgraded) {
+        Ok(()) => {
+            tracing::info!(path = %path.display(), "added {AUTOSTART_OPTION} to the autostart entry")
+        }
+        Err(error) => {
+            tracing::warn!(%error, path = %path.display(), "couldn't update the autostart entry");
+        }
+    }
+}
+
+/// `content`, an entry that is on, with [`AUTOSTART_OPTION`] after its
+/// `Exec` command; `None` when it needs no change.
+fn upgraded(content: &str) -> Option<String> {
+    if !enabled(content) {
+        return None;
+    }
+    let mut in_entry = false;
+    let mut added = false;
+    let mut lines = Vec::new();
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with('[') {
+            in_entry = trimmed == "[Desktop Entry]";
+        }
+        let command = trimmed
+            .split_once('=')
+            .filter(|(key, _)| in_entry && key.trim() == "Exec")
+            .map(|(_, command)| command);
+        match command {
+            Some(command)
+                if command
+                    .split_whitespace()
+                    .any(|arg| arg == AUTOSTART_OPTION) =>
+            {
+                return None;
+            }
+            Some(_) if !added => {
+                added = true;
+                lines.push(format!("{} {AUTOSTART_OPTION}", line.trim_end()));
+            }
+            _ => lines.push(line.to_owned()),
+        }
+    }
+    added.then(|| {
+        let mut upgraded = lines.join("\n");
+        if content.ends_with('\n') {
+            upgraded.push('\n');
+        }
+        upgraded
+    })
 }
 
 fn write(path: &Path, content: &str) -> io::Result<()> {
@@ -95,7 +167,7 @@ fn entry(program: &Path) -> Result<String, String> {
          Type=Application\n\
          Name=Numero\n\
          Comment=Text calculator\n\
-         Exec={}\n\
+         Exec={} {AUTOSTART_OPTION}\n\
          Icon={ICON_NAME}\n\
          Terminal=false\n\
          X-GNOME-Autostart-enabled=true\n",
@@ -160,7 +232,7 @@ mod tests {
     fn the_entry_starts_the_program_and_reads_back_as_on() {
         let content = entry(Path::new("/home/me/.nix-profile/bin/numero-app")).unwrap();
         assert!(content.starts_with("[Desktop Entry]\nType=Application\n"));
-        assert!(content.contains("\nExec=\"/home/me/.nix-profile/bin/numero-app\"\n"));
+        assert!(content.contains("\nExec=\"/home/me/.nix-profile/bin/numero-app\" --autostart\n"));
         assert!(content.contains("\nName=Numero\n"));
         assert!(enabled(&content));
     }
@@ -187,6 +259,38 @@ mod tests {
         assert!(enabled(
             "[Desktop Entry]\nExec=numero\n[Desktop Action new]\nHidden=true\n"
         ));
+    }
+
+    #[test]
+    fn an_older_entry_gets_the_option_once() {
+        let older =
+            "[Desktop Entry]\nType=Application\nExec=\"/usr/bin/numero-app\"\nIcon=numero\n";
+
+        let once = upgraded(older).unwrap();
+
+        assert_eq!(
+            once,
+            "[Desktop Entry]\nType=Application\nExec=\"/usr/bin/numero-app\" --autostart\nIcon=numero\n"
+        );
+        assert_eq!(upgraded(&once), None);
+        assert_eq!(
+            upgraded(&entry(Path::new("/usr/bin/numero-app")).unwrap()),
+            None
+        );
+    }
+
+    #[test]
+    fn an_entry_that_is_off_or_has_no_command_is_left_alone() {
+        assert_eq!(
+            upgraded("[Desktop Entry]\nExec=numero-app\nHidden=true\n"),
+            None
+        );
+        assert_eq!(upgraded("[Desktop Entry]\nType=Application\n"), None);
+        // Only the entry's own command counts.
+        assert_eq!(
+            upgraded("[Desktop Entry]\nType=Application\n[Desktop Action new]\nExec=numero-app\n"),
+            None
+        );
     }
 
     #[test]
