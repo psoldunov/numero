@@ -3,12 +3,31 @@
 //! from its bundle has one; the binary `cargo run` builds says so instead.
 
 use objc2::rc::Retained;
-use objc2_foundation::{NSBundle, NSError};
+use objc2_foundation::{NSAppleEventManager, NSBundle, NSError};
 use objc2_service_management::{SMAppService, SMAppServiceStatus, kSMErrorAlreadyRegistered};
 
 /// Why a bare binary can't open at login.
 const UNBUNDLED: &str =
     "Open at login needs Numero.app: this copy of Numero runs outside an app bundle";
+
+/// The Apple event macOS launches a login item with: Open Application
+/// (`kAEOpenApplication`), its property data (`keyAEPropData`) saying
+/// `keyAELaunchedAsLogInItem`.
+const OPEN_APPLICATION: u32 = u32::from_be_bytes(*b"oapp");
+const PROPERTY_DATA: u32 = u32::from_be_bytes(*b"prdt");
+const LAUNCHED_AS_LOGIN_ITEM: u32 = u32::from_be_bytes(*b"lgit");
+
+/// Whether macOS launched the app as its login item. Ask while the app
+/// finishes launching: only then is the launch's event the current one.
+pub(in crate::system) fn launched_as_login_item() -> bool {
+    let Some(event) = NSAppleEventManager::sharedAppleEventManager().currentAppleEvent() else {
+        return false;
+    };
+    event.eventID() == OPEN_APPLICATION
+        && event
+            .paramDescriptorForKeyword(PROPERTY_DATA)
+            .is_some_and(|data| data.enumCodeValue() == LAUNCHED_AS_LOGIN_ITEM)
+}
 
 /// Whether this process is an app started from its bundle, not a binary
 /// cargo built, which has no bundle id.

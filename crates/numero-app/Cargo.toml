@@ -52,9 +52,16 @@ objc2-app-kit = { workspace = true, features = [
   "NSWindow",
   "NSWorkspace",
 ] }
-# `system`: the login item, whether the app runs from its bundle, the
-# menu-bar item and the global hotkey.
-objc2-foundation = { workspace = true, features = ["NSBundle", "NSError", "NSString"] }
+# `system`: the login item and whether it launched the app, whether the
+# app runs from its bundle, the menu-bar item and the global hotkey.
+objc2-foundation = { workspace = true, features = [
+  "NSAppleEventDescriptor",
+  "NSAppleEventManager",
+  "NSBundle",
+  "NSError",
+  "NSString",
+  "objc2-core-services",
+] }
 objc2-service-management.workspace = true
 tray-icon.workspace = true
 global-hotkey.workspace = true

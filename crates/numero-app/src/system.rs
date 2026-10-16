@@ -9,6 +9,10 @@
 //! system rather than the settings file (the system's list keeps the
 //! choice, as Numi's helper does).
 //!
+//! A launch the login started, in menu-bar mode, starts in the tray: the
+//! window opens when the tray item, the shortcut or a second launch asks for
+//! it, or at once if the tray item can't be shown.
+//!
 //! Threads (the tray's, the hotkey's, the single instance's) and the
 //! platform's callbacks reach the UI as [`Event`]s over one channel, which a
 //! task on the main thread drains.
@@ -30,6 +34,7 @@ mod tray;
 mod window_level;
 mod windows;
 
+use std::ffi::OsString;
 use std::path::PathBuf;
 
 use async_channel::{Receiver, Sender};
@@ -59,6 +64,8 @@ pub(crate) enum Event {
 #[derive(Debug)]
 pub(crate) struct Launch {
     openings: Vec<Opening>,
+    /// The autostart entry started it, at login.
+    autostarted: bool,
     instance: Option<instance::Instance>,
     events: Sender<Event>,
     received: Receiver<Event>,
@@ -69,16 +76,19 @@ pub(crate) struct Launch {
 /// end.
 pub(crate) fn launch() -> Option<Launch> {
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/"));
-    let openings = opening::from_args(std::env::args_os().skip(1), &cwd);
+    let args: Vec<OsString> = std::env::args_os().skip(1).collect();
+    let openings = opening::from_args(args.iter().cloned(), &cwd);
     match instance::claim(&openings) {
         instance::Claim::Forwarded => {
             tracing::info!("Numero is running already; showed it");
             None
         }
         instance::Claim::First(instance) => {
+            login::upgrade();
             let (events, received) = async_channel::unbounded();
             Some(Launch {
                 openings,
+                autostarted: login::autostarted(&args),
                 instance,
                 events,
                 received,
@@ -121,6 +131,9 @@ struct Desktop {
     tray: Option<tray::Tray>,
     /// Whether the desktop shows the tray item now.
     tray_shown: bool,
+    /// The app started in the tray and the item isn't up yet: if it can't
+    /// be shown, the window opens instead.
+    waiting_for_tray: bool,
     hotkey: Option<hotkey::Binding>,
     /// The calculator's window, while it is open.
     main_window: Option<WindowId>,
@@ -138,14 +151,18 @@ struct Desktop {
 impl Global for Desktop {}
 
 /// Starts it all: listens for second launches, applies `settings`, opens
-/// the window and what the launch asked to open.
+/// the window, unless the launch starts in the tray, and what the launch
+/// asked to open. Call it while the app finishes launching.
 pub(crate) fn start(launch: Launch, settings: &Settings, cx: &mut App) {
     let Launch {
         openings,
+        autostarted,
         instance,
         events,
         received,
     } = launch;
+    // First, while macOS's launch event is still the current one.
+    let at_login = autostarted || login::launched_as_login_item();
     let socket = instance.map(|instance| instance.serve(events.clone()));
     let subscriptions = vec![
         cx.on_window_closed(windows::closed),
@@ -174,6 +191,7 @@ pub(crate) fn start(launch: Launch, settings: &Settings, cx: &mut App) {
         applied: None,
         tray: None,
         tray_shown: false,
+        waiting_for_tray: false,
         hotkey: None,
         main_window: None,
         hiding: false,
@@ -190,20 +208,40 @@ pub(crate) fn start(launch: Launch, settings: &Settings, cx: &mut App) {
     })
     .detach();
     apply(settings, cx);
-    windows::show(cx);
+    if starts_in_tray(at_login, settings.menu_bar_mode, &openings) {
+        tracing::info!("opened at login in menu-bar mode; starting in the tray");
+        cx.global_mut::<Desktop>().waiting_for_tray = true;
+    } else {
+        windows::show(cx);
+    }
     if !openings.is_empty() {
         open(openings, cx);
     }
+}
+
+/// Whether a launch leaves the window closed and waits in the tray: one
+/// the login started, in menu-bar mode, with nothing to open.
+const fn starts_in_tray(at_login: bool, menu_bar_mode: bool, openings: &[Opening]) -> bool {
+    at_login && menu_bar_mode && openings.is_empty()
 }
 
 fn handle(event: Event, cx: &mut App) {
     match event {
         Event::Toggle | Event::Tray(TrayEvent::Toggle) => windows::toggle(cx),
         Event::Open(openings) => open(openings, cx),
-        Event::Tray(TrayEvent::Shown) => cx.global_mut::<Desktop>().tray_shown = true,
+        Event::Tray(TrayEvent::Shown) => {
+            let desktop = cx.global_mut::<Desktop>();
+            desktop.tray_shown = true;
+            desktop.waiting_for_tray = false;
+        }
         Event::Tray(TrayEvent::Unavailable(reason)) => {
             tracing::info!(%reason, "the tray item isn't shown");
-            cx.global_mut::<Desktop>().tray_shown = false;
+            let desktop = cx.global_mut::<Desktop>();
+            desktop.tray_shown = false;
+            if std::mem::take(&mut desktop.waiting_for_tray) && desktop.main_window.is_none() {
+                tracing::info!("no tray to start in; opening the window");
+                windows::show(cx);
+            }
         }
         Event::Tray(TrayEvent::Chose(item)) => choose(item, cx),
     }
@@ -412,4 +450,18 @@ pub(crate) fn launch_at_login() -> bool {
 /// Add Numero to, or remove it from, the programs that open at login.
 pub(crate) fn set_launch_at_login(enabled: bool) -> Result<(), String> {
     login::set(enabled)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_a_launch_at_login_in_menu_bar_mode_starts_in_the_tray() {
+        assert!(starts_in_tray(true, true, &[]));
+        assert!(!starts_in_tray(true, false, &[]));
+        assert!(!starts_in_tray(false, true, &[]));
+        // What the launch asks to open needs the window.
+        assert!(!starts_in_tray(true, true, &[Opening::Link(Link::Show)]));
+    }
 }

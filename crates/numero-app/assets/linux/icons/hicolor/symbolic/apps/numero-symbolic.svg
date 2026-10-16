@@ -3,11 +3,17 @@
     The app icon's # as one flat shape, for panels and menus that draw
     symbolic icons in the theme's colour. Same paths as
     app-icon/numero.svg, cropped to the glyph with a little clear round it.
+
+    Plasma recolours an icon only through this stylesheet: it swaps the
+    style below for its own, so `ColorScheme-Text` takes the panel's text
+    colour. GTK recolours symbolic icons whatever their fill. The colour
+    here is for hosts that do neither.
   -->
-  <g fill="#2e3436">
-    <path d="M417.3 244.0L492.7 244.0A16 16 0 0 1 508.4 263.1L410.4 767.1A16 16 0 0 1 394.7 780.0L319.3 780.0A16 16 0 0 1 303.6 760.9L401.6 256.9A16 16 0 0 1 417.3 244.0Z"/>
-    <path d="M629.3 244.0L704.7 244.0A16 16 0 0 1 720.4 263.1L622.4 767.1A16 16 0 0 1 606.7 780.0L531.3 780.0A16 16 0 0 1 515.6 760.9L613.6 256.9A16 16 0 0 1 629.3 244.0Z"/>
-    <path d="M324.7 360.0L752.1 360.0A16 16 0 0 1 767.8 379.1L753.8 451.1A16 16 0 0 1 738.1 464.0L310.7 464.0A16 16 0 0 1 295.0 444.9L309.0 372.9A16 16 0 0 1 324.7 360.0Z"/>
-    <path d="M285.9 560.0L713.3 560.0A16 16 0 0 1 729.0 579.1L715.0 651.1A16 16 0 0 1 699.3 664.0L271.9 664.0A16 16 0 0 1 256.2 644.9L270.2 572.9A16 16 0 0 1 285.9 560.0Z"/>
-  </g>
+  <defs>
+    <style type="text/css" id="current-color-scheme">.ColorScheme-Text { color: #2e3436; }</style>
+  </defs>
+  <path class="ColorScheme-Text" style="fill:currentColor" d="M417.3 244.0L492.7 244.0A16 16 0 0 1 508.4 263.1L410.4 767.1A16 16 0 0 1 394.7 780.0L319.3 780.0A16 16 0 0 1 303.6 760.9L401.6 256.9A16 16 0 0 1 417.3 244.0Z"/>
+  <path class="ColorScheme-Text" style="fill:currentColor" d="M629.3 244.0L704.7 244.0A16 16 0 0 1 720.4 263.1L622.4 767.1A16 16 0 0 1 606.7 780.0L531.3 780.0A16 16 0 0 1 515.6 760.9L613.6 256.9A16 16 0 0 1 629.3 244.0Z"/>
+  <path class="ColorScheme-Text" style="fill:currentColor" d="M324.7 360.0L752.1 360.0A16 16 0 0 1 767.8 379.1L753.8 451.1A16 16 0 0 1 738.1 464.0L310.7 464.0A16 16 0 0 1 295.0 444.9L309.0 372.9A16 16 0 0 1 324.7 360.0Z"/>
+  <path class="ColorScheme-Text" style="fill:currentColor" d="M285.9 560.0L713.3 560.0A16 16 0 0 1 729.0 579.1L715.0 651.1A16 16 0 0 1 699.3 664.0L271.9 664.0A16 16 0 0 1 256.2 644.9L270.2 572.9A16 16 0 0 1 285.9 560.0Z"/>
 </svg>
